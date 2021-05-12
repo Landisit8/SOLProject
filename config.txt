@@ -1,0 +1,3 @@
+numeroThread=100
+memoriaMassima=2048
+socket=canale
