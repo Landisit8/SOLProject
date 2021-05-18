@@ -3,7 +3,7 @@
 #include <string.h>
 #include <errno.h>
 
-#define config "./config.txt"
+#define config ".setup/config.txt"
 #define MAX 1024
 
 /**
@@ -102,6 +102,7 @@ int main ()
 {
 	long thrw;
 	long memMax;
+			if ((string=malloc(MAX*sizeof(char))) == NULL)
 	char* sktname;
 	if ((sktname = malloc(MAX*sizeof(char))) == NULL)
 	{
