@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <utils.h>
 
 #define MAX 2048
 
@@ -12,21 +13,6 @@ typedef struct tree{
 	struct tree *left;
 	struct tree *right;
 } nodo;
-
-void print (nodo* n){
-
-	if(n == NULL) return;
-
-	printf("stampa elemento:\n");
-	
-	printf("Frequenza: %d\n", n->freq);
-	printf("Nome: %s\n", n->nome);
-	printf("Testo: %s\n", n->testo);
-	printf("Stato: %d\n", n->stato);
-	printf("\n");
-	print(n->left);
-	print(n->right);	
-}
 
 nodo* newNode (int freq, char* nome, char* testo, int stato)
 {
@@ -56,6 +42,21 @@ nodo* addTree(nodo* n, int freq, char* nome, char* testo, int stato)
 	return n;
 }
 
+nodo* findTreeMin(nodo* n, int* min, char** name)
+{	
+	if (n == NULL)	return NULL;
+	if (*min > (n->freq))	
+	{
+		*min = n->freq;
+		strcpy(*name,n->nome); 
+	}
+
+	findTreeMin(n->left,min,name);
+	findTreeMin(n->right,min,name);
+
+	return n;
+}
+
 nodo* findTreeFromName(nodo* n, char* str)
 {
 	nodo* tmp = NULL;
@@ -66,39 +67,6 @@ nodo* findTreeFromName(nodo* n, char* str)
 		if (strlen(str) <= strlen(n->nome))	tmp = findTreeFromName(n->left,str);
 		if (strlen(str) > strlen(n->nome))	tmp = findTreeFromName(n->right,str);
 	
-	return tmp;
-}
-
-nodo* findTreeMin(nodo* n, int* min, char** name)
-{
-	nodo* tmp = NULL;
-	if (n == NULL)	return NULL;
-
-	if (*min > (n->freq))	
-	{
-		*min = n->freq;
-		strcpy(*name,n->nome);
-	}
-
-	tmp = findTreeMin(n->left,min,name);
-	tmp = findTreeMin(n->right,min,name);
-
-	return tmp;
-}
-
-nodo* searchLeaf (nodo* n)
-{
-	unsigned short a;
-
-	nodo* tmp = NULL;
-	if (n->left == NULL)	a++;
-	else	tmp = searchLeaf(n->left);
-	if (n->right == NULL)	a++;
-	else	tmp = searchLeaf(n->right);
-	printf("pre:%d\n", a);
-	if (a == 2)
-		return n;
-	printf("post:%d\n", a);
 	return tmp;
 }
 
@@ -119,29 +87,110 @@ void swapTree (nodo* a, nodo* b)
 	free(tmp);
 }
 
-//	sostitusco con una foglia
-//	elimino
-nodo* minTree(nodo* n)
+nodo* isLeaf (nodo* parent)
+{
+	nodo* tmp = (nodo*) malloc(sizeof(nodo));
+	if (parent->left == NULL && parent->right == NULL)
+	{
+		swapTree(tmp,parent);
+		return tmp;
+	}
+	free(tmp);
+	return NULL;
+}
+
+nodo* searchLeaf (nodo* n)
+{
+	if (n == NULL)
+		return NULL;
+
+	nodo* leaf = NULL;
+
+	if (n->left != NULL && n->right != NULL)
+	{
+		if ((leaf = isLeaf(n->right)) != NULL)
+		{
+			n->right = NULL;
+			return leaf;
+		}
+		if ((leaf = isLeaf(n->left)) != NULL)
+		{
+			n->left = NULL;
+			return leaf;
+		}
+
+		leaf = searchLeaf(n->left);
+	}
+	if (n->left == NULL && n->right != NULL)
+	{
+		if ((leaf = isLeaf(n->right)) != NULL)
+		{
+			n->right = NULL;
+			return leaf;
+		}
+		leaf = searchLeaf(n->right);
+	}
+
+	if (n->left != NULL && n->right == NULL)
+	{
+		if ((leaf = isLeaf(n->left)) != NULL)
+		{
+			n->left = NULL;
+			return leaf;
+		}
+		leaf = searchLeaf(n->left);
+	}
+	return leaf;
+}
+
+nodo* lfuRemove(nodo* n)
 {
 	if (n == NULL)	return NULL;
+
+	if (n->left == NULL && n->right == NULL)	free(n);
+
 	int min = n->freq;
 	char* name = malloc(MAX*sizeof(char));
 	nodo* find = NULL;
 	nodo* leaf = NULL;
 	
-	findTreeMin(n,&min,&name);
+	CHECK_EQ_EXIT(findTreeMin(n,&min,&name),NULL,"Non esiste ancora/piu' una memoria cache");
 	printf("Minima frequenza: %d\n", min);
 	printf("nome utente: %s\n", name);
-	find = findTreeFromName(n,name);
+
+	CHECK_EQ_EXIT(find = findTreeFromName(n,name),NULL,"Non esiste ancora/piu' una memoria cache oppure non e' stato trovato il nome");
 	printf("convertito in nodo, nome: %s\n", find->nome);
-	leaf = searchLeaf(n);
+
+	CHECK_EQ_EXIT(leaf = searchLeaf(n),NULL,"Non esiste ancora/piu' una memoria cache");
 	printf("foglia:%s\n", leaf->nome);
+
 	swapTree(leaf, find);
-
 	printf("find:%s <-> leaf:%s\n", find->nome, leaf->nome);
-	//cancellazione
+	free(leaf);
 
-	return NULL;
+	return n;
+}
+
+nodo* fileRemove(nodo* n, char* nome)
+{
+	if (n == NULL)	return NULL;
+
+	if (n->left == NULL && n->right == NULL)	free(n);
+
+	nodo* find = NULL;
+	nodo* leaf = NULL;
+
+	CHECK_EQ_EXIT(find = findTreeFromName(n,nome),NULL,"Non esiste ancora/piu' una memoria cache");
+	printf("trovato nome: %s\n", find->nome);
+
+	CHECK_EQ_EXIT(leaf = searchLeaf(n),NULL,"Non esiste ancora/piu' una memoria cache");
+	printf("foglia:%s\n", leaf->nome);
+
+	swapTree(leaf, find);
+	printf("find:%s <-> leaf:%s\n", find->nome, leaf->nome);
+	free(leaf);
+
+	return n;
 }
 
 int addFreqquenza(int fre)
@@ -159,14 +208,12 @@ int changeStatus(int stato)
 
 int main() {
 	nodo* root = NULL;
-	root = addTree(root, 4, "abcd", "radice", 0);
+/*	root = addTree(root, 4, "abcd", "radice", 0);
 	addTree(root, 2, "ema", "stringa1", 0);
 	addTree(root, 3, "amel", "stringa2", 0);
 	addTree(root, 4, "lorenzo", "stringa3", 0);
 	addTree(root, 5, "federico", "stringa4", 0);
 	addTree(root, 6, "alessa", "stringa5", 0);
-
-/*	ok	
 	printf("%s\n", root->nome);
 	printf("cambio verso, sinistra:\n");
 	printf("foglia della radice: %s\n", root->left->nome);
@@ -177,26 +224,27 @@ int main() {
 	printf("%s\n", root->right->right->nome);
 	printf("---------\n");
 	print(root);
-	
 	printf("Ricerca:\n");
 	nodo* find = NULL;
 	printf("%s\n", root->left->right->nome);
 	printf("%s\n", root->left->right->testo);
 	find = findTreeFromName(root, "amel");
 	printf("Trovato '%s': %d\n", find->nome, find->freq);
-	*/
 	printf("---------\n");
-	minTree(root);
-/*
+	print(root);
+	lfuRemove(root);
+	printf("---------\n");
+	CHECK_EQ_EXIT(fileRemove(root, "lorenzo"), NULL,"Non esiste nessun albero");
+	print(root);
 	printf("min:\n");
 	minTree(root, root->left, root->right);
 	print(root);
-
 	printf("---------\n");
-
 	printf("swap:\n");
 	swapTree(root, root->left);
 	print(root);
-*/
-	return 0;
+
+	printf("---------\n");
+	lfuRemove(root);
+*/	return 0;
 }
