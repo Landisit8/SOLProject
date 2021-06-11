@@ -13,7 +13,7 @@ typedef enum
 	APPEND_OP	=	3,	//	RICHIESTA DI CONCATENARE IL CONTENUTO DI UN FILE.
 	CLOSE_OP	=	4,	//	RICHIESTA DI CHIUSURA DI UN FILE.
 	REMOVE_OP	=	5,	//	RICHIESTA DI RIMOZIONE DI UN FILE.
-	STATUS_OP	=	6,	//	CAMBIA LO STATO.
+	LOCK_OP		=	6,	//	CAMBIA LO STATO.
 
 	/*
 	* \aggiungere qui eltre operazioni che si vogliono implementare

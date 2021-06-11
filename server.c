@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <sys/select.h>
+#include <pthread.h>
 
 #include <utils.h>
 #include <conn.h>
@@ -21,9 +22,14 @@ typedef struct msg {
 	char *nome;
 	ops op;
     char *str;
+    int lNome;
+    int lStr;
 } msg_t;
 
 char* sktname = NULL;
+
+long memMax;
+long numMax;
 
 nodo pRoot = {0,"pRoot","abcd",1,NULL,NULL};
 
@@ -57,6 +63,7 @@ void message(int back, msg_t* msg)
 int operation(int fd_io, msg_t msg) {
 	printf("sono dentro operation\n");
 	int tmp;
+	int lunghezza;
     switch(msg.op)
     {
     	case OPEN_OP:
@@ -76,53 +83,68 @@ int operation(int fd_io, msg_t msg) {
     	break;
     	case WRITE_OP:
     		printf("sto eseguendo la write\n");
-
+    		tmp = writeFile(&pRoot,msg.nome, msg.str);
+    		message(tmp,&msg);
+    		operation(fd_io,msg);
     	break;
     	case APPEND_OP:
     		printf("sto eseguendo la append\n");
-
+    		tmp = appendToFile(&pRoot,msg.nome, msg.str);
+    		message(tmp,&msg);
+    		operation(fd_io,msg);
+    		message(tmp,&msg);
+    		operation(fd_io,msg);
     	break;
     	case CLOSE_OP:
     		printf("sto eseguendo la close\n");
-    		tmp = changeStatus(&pRoot,msg.nome);
+    		tmp = changeStatus(&pRoot,msg.nome,1);
     		message(tmp,&msg);
     		operation(fd_io,msg);
     	break;
     	case REMOVE_OP:
-    		printf("sto eseguendo la remove\n");
-
+    		printf("sto eseguendo la lfuremove\n");
+    		//tmp = fileRemove(&pRoot,msg.nome);
+    		tmp = lfuRemove(&pRoot);
+    		message(tmp,&msg);
+    		operation(fd_io,msg);
     	break;
-    	case STATUS_OP:
+    	case LOCK_OP:
     		printf("sto eseguendo la stato :)\n");
-    		tmp = changeStatus(&pRoot,msg.nome);
+    		tmp = changeStatus(&pRoot,msg.nome,0);
     		message(tmp,&msg);
     		operation(fd_io,msg);
     	break;
     	case OP_OK:
     		printf("sto mandando ok\n");
-    		if (writen(fd_io, msg.nome, MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "Operazione eseguita con successo", MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
+    		lunghezza = 32;
+    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
+    		if (writen(fd_io, "Operazione eseguita con successo", lunghezza*sizeof(char))<=0) { free (msg.nome); return -1;}
     	break;
     	case OP_FOK:
-    	printf("sto mandando no ok\n");
-    		if (writen(fd_io, msg.nome, MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "Operazione non eseguita con successo", MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
+    		printf("sto mandando no ok\n");
+    		lunghezza = 36;
+    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
+    		if (writen(fd_io, "Operazione non eseguita con successo", lunghezza*sizeof(char))<=0) { free (msg.nome); return -1;}
     	break;
     	case OP_BLOCK:
-    		if (writen(fd_io, msg.nome, MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "File bloccato", MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
+    	    lunghezza = 13;
+    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
+    		if (writen(fd_io, "File bloccato", lunghezza*sizeof(char))<=0) { free (msg.nome); return -1;}
     	break;
     	case OP_FFL_SUCH:
-    		if (writen(fd_io, msg.nome, MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "File richiesto non esiste",MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
+    	   	lunghezza = 25;
+    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
+    		if (writen(fd_io, "File richiesto non esiste",lunghezza*sizeof(char))<=0) { free (msg.nome); return -1;}
     	break;
     	case OP_MSG_SIZE:
-    		if (writen(fd_io, msg.nome, MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "Mesaggio troppo lungo", MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
+    	    lunghezza = 22;
+    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
+    		if (writen(fd_io, "Messaggio troppo lungo", lunghezza*sizeof(char))<=0) { free (msg.nome); return -1;}
     	break;
     	case OP_END:
-    		if (writen(fd_io, msg.nome, MAXS*sizeof(char))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "Raggiunto il massimo degli operazioni, attendere", MAXS*sizeof(char))<=0) { free(msg.nome); return -1;}
+    	    lunghezza = 48;
+    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
+    		if (writen(fd_io, "Raggiunto il massimo degli operazioni, attendere", lunghezza*sizeof(char))<=0) { free(msg.nome); return -1;}
     	break;
     	default:
     		return -1;
@@ -135,24 +157,21 @@ int readValue (int fd_io)
 {
 	msg_t msg;
 
-    msg.nome = calloc(MAXS * sizeof(char), sizeof(char));
-    printf("1\n");
-    if (readn(fd_io, msg.nome, MAXS*sizeof(char))<=0) return -1;
-    printf("%s\n", msg.nome);
+    if (readn(fd_io, &msg.lNome, sizeof(int))<=0) return -1;
+    msg.nome = calloc(msg.lNome * sizeof(char), sizeof(char));
+    if (readn(fd_io, msg.nome, msg.lNome*sizeof(char))<=0) return -1;
+    printf("Nome: %s\n", msg.nome);
 
-    msg.str = calloc(MAXS * sizeof(char), sizeof(char));
-    printf("2\n");
-    if (readn(fd_io, msg.str, sizeof(char)*MAXS)<=0) return -1;
-    printf("%s\n", msg.str);
+    if (readn(fd_io, &msg.lStr, sizeof(int))<=0) return -1;
+    msg.str = calloc(msg.lStr * sizeof(char), sizeof(char));
+    if (readn(fd_io, msg.str, sizeof(char)*msg.lStr)<=0) return -1;
+    printf("testo: %s\n", msg.str);
 
-    printf("3\n");
-    if (readn(fd_io, &msg.op, sizeof(ops))>0) {printf("%d\n", msg.op); operation(fd_io,msg);}
+    if (readn(fd_io, &msg.op, sizeof(ops))>0) {printf("operazione: %d\n", msg.op); operation(fd_io,msg);}
     else	return -1;
 
     return 0;
 }
-
-
 
 // ritorno l'indice massimo tra i descrittori attivi
 int updatemax(fd_set set, int fdmax) {
@@ -164,12 +183,12 @@ int updatemax(fd_set set, int fdmax) {
 
 int main (int argc, char* argv[])
 {
-	cleanup();
-	atexit(cleanup);
+	long thrw;
+	addTree(&pRoot,0,"ema","gay",0);
+	addTree(&pRoot,5,"amelia","hola",0);
+	addTree(&pRoot,7,"fede","bello",0);
 
 	//	controllo se file config non esiste
-	long thrw;
-	long memMax;
 	if ((sktname = malloc(MAXS*sizeof(char))) == NULL)
 	{
 
@@ -178,10 +197,12 @@ int main (int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 	
-	parsing(&thrw,&memMax,&sktname);
+	parsing(&thrw,&memMax,&sktname,&numMax);
 
-	printf("nthread:%ld - memoria:%ld - socketname:%s \n", thrw, memMax, sktname);
-	
+	printf("nthread:%ld - memoria:%ld - socketname:%s - nfile massimi:%ld\n", thrw, memMax, sktname,numMax);
+
+	cleanup();
+	atexit(cleanup);
 	/*
   	*********************************************
  	Creazione del socket e generazione del pool di thread
@@ -223,26 +244,22 @@ int main (int argc, char* argv[])
 	int fdmax = fd;
 
 	//loop infinito
-	printf("Entro nel loop\n");
     for(;;) 
     {      
 		// preparo la maschera per la select
 		tmpset = set;
-		printf("%d\n", fdmax);
 		if (select(fdmax+1, &tmpset, NULL, NULL, NULL) == -1) 
 		{ 
 			// attenzione al +1
 	    	perror("select");
 	    	return -1;
 		}
-		printf("sono bello\n");
 		// cerchiamo di capire da quale fd abbiamo ricevuto una richiesta
 		for(int i = 0; i <= fdmax; i++) 
 		{
 			//se fa parte del set...
 	   		if (FD_ISSET(i, &tmpset)) 
 	   		{
-	   			printf("sono bellissimo\n");
 				if (i == fd) 
 				{ 
 					//...ed se e' una nuova richiesta di connessione...
@@ -256,7 +273,6 @@ int main (int argc, char* argv[])
 
 				fd_c = i;  // e' una nuova richiesta da un client già connesso
 				// eseguo il comando e se c'e' un errore lo tolgo dal master set
-				printf("eseguo la readvalue\n");
 				if (readValue(fd_c) < 0) 
 				{ 
 		  			close(fd_c); 

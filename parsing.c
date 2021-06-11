@@ -9,7 +9,7 @@
 
 //	attraverso il file config che contiene i 3 parametri, estrabolo le informaizoni
 //	e le carico in 3 variabili.
-int parsing (long* thrw, long* memMax, char** sktname)
+int parsing (long* thrw, long* memMax, char** sktname, long* numMax)
 {
 	//	descrittori
 	FILE *fd = NULL;
@@ -67,9 +67,10 @@ int parsing (long* thrw, long* memMax, char** sktname)
 				c++;
 				if (c == 1)	*thrw = tmp;
 				else if (c == 2) *memMax = tmp;
+				else if (c == 3) *numMax = tmp;
 			break;
 			case 1:
-				if (c < 2) fprintf(stderr, "non hai inserito un numero \n");
+				if (c < 3) fprintf(stderr, "non hai inserito un numero \n");
 				else strncpy(*sktname, string, MAXS);
 			break;
 			case 2:
@@ -81,5 +82,6 @@ int parsing (long* thrw, long* memMax, char** sktname)
 			break;
 		}
 	}
+	*memMax = *memMax * 1048576;	//	conversione da megabyte in byte
 	return 0;
 }

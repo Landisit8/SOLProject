@@ -7,11 +7,9 @@
 
 #include <utils.h>
 
-#define MAXS 1024
-
 /** 
  * \   
 */
-int parsing (long* thrw, long* memMax, char** sktname);
+int parsing (long* thrw, long* memMax, char** sktname, long* numMax);
 
 #endif // OPS_H_

@@ -13,6 +13,8 @@
 #include <pthread.h>
 #include <errno.h>
 
+#define MAXS 1024
+
 #if !defined(BUFSIZE)
 #define BUFSIZE 256
 #endif

@@ -6,13 +6,11 @@
 #include <string.h>
 #include <utils.h>
 
-#define MAX_CACHE 2048
-
 //	struttura dati per l'albero
 typedef struct tree{
 	int freq;				//	frequenza, il numero di volte che un file viene fatta una qualsiasi operazione
-	char nome[2048];		
-	char testo[2048];
+	char* nome;		
+	char* testo;
 	int stato;				//	stato, indica se un file e' chiuso o aperto
 	struct tree *left;
 	struct tree *right;
@@ -66,7 +64,7 @@ nodo* searchLeaf (nodo* n);
  * \si scambia con il nodo con la frequenza minima trovata con la foglia e si cancella la foglia 
  * \return n ok  NULL non esiste l'albero   
 */
-nodo* lfuRemove(nodo* n);
+int lfuRemove(nodo* n);
 
 /** 
  * \cerca il nome nel nodo poi si cerca una foglia qualsisi e con le considerazioni della funzione searchLeaf
@@ -83,9 +81,9 @@ int addFreqquenza(int fre);
 
 /** 
  * \cambia lo stato del nodo
- * \return il valore cambiato dello stato 
+ * \return il valore cambiato dello stato //lb operazione
 */
-int changeStatus(nodo* root, char* name);
+int changeStatus(nodo* root, char* name, int lb);
 
 /** 
  * \
@@ -98,6 +96,18 @@ int openFile(nodo* root, char* name);
  * \ 
 */
 int readFile(nodo* root, char* name);
+
+/** 
+ * \
+ * \ 
+*/
+int appendToFile(nodo* root, char* name, char* text);
+
+/** 
+ * \
+ * \ 
+*/
+int writeFile(nodo* root, char* name, char* text);
 
 void print (nodo* n);
 
