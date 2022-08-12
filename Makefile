@@ -22,12 +22,10 @@ TARGETS 	=	server		\
 
 all		: $(TARGETS)
 
-bob		: server.o parsing.o lfucache.o
+bob		: server.o lfucache.o
 	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) $^ -o $@
-server.o:	server.c ./include/parsing.h
-
-parsing.o: parsing.c ./include/parsing.h
-lfucache.o: lfucache.c ./include/lfucache.h
+server.o:	server.c lfucache.h
+lfucache.o: lfucache.c lfucache.h
 
 bau		: client.o
 	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) $^ -o $@

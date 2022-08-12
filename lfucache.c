@@ -63,10 +63,10 @@ nodo* findTreeFromName(nodo* n, char* str)
 	if (n == NULL)	return NULL;
 	if ((strcmp(n->nome, str)) == 0)	return n;
 
-	else 
+	else {
 		if (strlen(str) <= strlen(n->nome))	tmp = findTreeFromName(n->left,str);
 		if (strlen(str) > strlen(n->nome))	tmp = findTreeFromName(n->right,str);
-	
+	}
 	return tmp;
 }
 
@@ -82,14 +82,19 @@ int swapTree (nodo* a, nodo* b)
 	a->stato = b->stato;
 	printf("inizio scambio pt2\n");
 	b->freq = tmp->freq;
-	//	qua non funziona nulla....
+
 	printf("%s;%s\n", b->nome, tmp->nome);
 	printf("%zu;%zu\n", strlen(b->nome), strlen(tmp->nome));
+
 	if (realloc(b->nome, strlen(tmp->nome)) == NULL)	return -1;	//EMEMORY
 	printf("%s;%s\n", b->nome, tmp->nome);
+
 	printf("aaaaaaaaaaa\n");
+	//	meglio memcpy di strcpy
 	strcpy(b->nome, tmp->nome);
+
 	if (realloc(b->testo, strlen(tmp->testo)) == NULL)	return -1;	//EMEMORY
+	//	meglio memcpy di strcpy
 	strcpy(b->testo, tmp->testo);
 	b->stato = tmp->stato;
 	printf("finito\n");
@@ -175,19 +180,22 @@ int lfuRemove(nodo* n)
 	nodo* find = NULL;
 	nodo* leaf = NULL;
 	
+	//	cerco il nodo minimo e trovp il nome
 	if (!findTreeMin(n,&min,&name))	return -3;
 	printf("Minima frequenza: %d\n", min);
 	printf("nome utente: %s\n", name);
 
+	// cerco il nodo dal nome del nodo minimo e ottengo un riferimento
 	if (!(find = findTreeFromName(n,name)))	return -3;
 	printf("convertito in nodo, nome: %s\n", find->nome);
 
+	//	cerco una foglia generica
 	if (!(leaf = searchLeaf(n)))	return -3;
 	printf("foglia:%s\n", leaf->nome);
 
 	if (swapTree(leaf, find) != 0)	return -1;
 	printf("find:%s <-> leaf:%s\n", find->nome, leaf->nome);
-	free(leaf)
+	free(leaf);
 	return 0;
 }
 
@@ -283,10 +291,11 @@ int changeStatus(nodo* root, char* name, int lb)
 	nodo* find = NULL;
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	if ((find = findTreeFromName(root,name)) == NULL)	return -3;
-	else
+	else {
 		if (lb == find->stato)	return -1;
 		if (find->stato == 0)	find->stato = 1;
-		else	if (find->stato == 1)	find->stato = 0;
+		else if (find->stato == 1)	find->stato = 0;
+		}
 
 	addFrequenza(find->freq);
 	return 0;
