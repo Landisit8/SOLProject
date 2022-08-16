@@ -39,8 +39,8 @@ void cleanup() {
 	unlink(sktname);
 }
 
-//	attraverso il file config che contiene i 3 parametri, estrabolo le informaizoni
-//	e le carico in 3 variabili.
+//	attraverso il file config che contiene i 4 parametri, estrabolo le informaizoni
+//	e le carico in 4 variabili.
 int parsing (long* thrw, long* memMax, char** sktname, long* numMax)
 {
 	//	descrittori
@@ -68,9 +68,10 @@ int parsing (long* thrw, long* memMax, char** sktname, long* numMax)
 	
 	while(fgets(buffer,MAXS,fd) != NULL)
 	{
+
 		//	controllo di aver letto tutta la riga
 		char* nline;
-		if ((nline=strchr(buffer, '\n')) == NULL)
+		if ((nline=strchr(buffer, ';')) == NULL)
 		{
 			fprintf(stderr, "buffer troppo piccolo, aumentare il MAX (%d) ricompilando con '-DMAX=<n>' \n", MAXS);
 			return -1;
