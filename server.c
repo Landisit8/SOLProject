@@ -313,8 +313,8 @@ int main (int argc, char* argv[])
 	SYSCALL_EXIT("listen", notused, listen(fd, MAXBACKLOG), "listen", "");
 
 
-	  // Creazione del parametro da passare ai thread worker. Ho un array di param e in ogni posizione dell'array
- 	 // faccio in modo di passare un numero che mi identifica il thread e l'fd_set
+	// Creazione del parametro da passare ai thread worker. Ho un array di param e in ogni posizione dell'array
+ 	// faccio in modo di passare un numero che mi identifica il thread e l'fd_set
 
 
     // 0 tmpset e aggiungo fd all'insieme
