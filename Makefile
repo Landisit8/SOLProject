@@ -30,6 +30,7 @@ lfucache.o: lfucache.c lfucache.h
 bau		: client.o
 	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) $^ -o $@
 client.o: client.c
+API.o: API.c
 
 clean		: 
 	rm -f $(TARGETS)
