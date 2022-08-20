@@ -13,30 +13,28 @@
 #include <conn.h>
 #include <ops.h>
 #include <lfucache.h>
-#include <parsing.h>
 
 #define config "./setup/config.txt"
 
-/** 
- * tipo del messaggio
- */
-typedef struct msg { 
-	char *nome;
-	ops op;
-    char *str;
-    int lNome;
-    int lStr;
-} msg_t;
-
 char* sktname = NULL;
 
+int fdmax;
 long memMax;
 long numMax;
+fd_set set;
 
 nodo pRoot = {0,"pRoot","abcd",1,NULL,NULL};
 
 void cleanup() {
 	unlink(sktname);
+}
+
+// ritorno l'indice massimo tra i descrittori attivi
+int updatemax(fd_set set, int fdmax) {
+    for(int i=(fdmax-1);i>=0;--i)
+	if (FD_ISSET(i, &set)) return i;
+    assert(1==0);
+    return -1;
 }
 
 //	attraverso il file config che contiene i 4 parametri, estrabolo le informaizoni
@@ -145,7 +143,7 @@ void message(int back, msg_t* msg)
 int operation(int fd_io, msg_t msg) {
 	printf("sono dentro operation\n");
 	int tmp;
-	int lunghezza;
+
     switch(msg.op)
     {
     	case OPEN_OP:
@@ -196,37 +194,62 @@ int operation(int fd_io, msg_t msg) {
     		message(tmp,&msg);
     		operation(fd_io,msg);
     	break;
+		case END_OP:
+			printf("sto eseguendo la chiusura del server\n");
+			close(fd_io);
+			if (fd_io == fdmax) {
+				fdmax = updatemax(set,fdmax);
+				message(0,&msg);
+				operation(fd_io,msg);
+			}
+		break;
     	case OP_OK:
     		printf("sto mandando ok\n");
-    		lunghezza = 32;
-    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "Operazione eseguita con successo", lunghezza*sizeof(char))<=0) { free (msg.nome); return -1;}
+			printf("ope: %d\n", msg.op);
+			printf("fd_io: %d\n", fd_io);
+			int ope = 10;
+    		if (writen(fd_io, &ope, sizeof(int))<=0) {
+				errno = -1;
+				perror("ERRORE0: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+				}
     	break;
     	case OP_FOK:
     		printf("sto mandando no ok\n");
-    		lunghezza = 36;
-    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "Operazione non eseguita con successo", lunghezza*sizeof(char))<=0) { free (msg.nome); return -1;}
+    		if (writen(fd_io, &msg, sizeof(int))<=0) {
+				errno = -1;
+				perror("ERRORE1: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+				}
     	break;
     	case OP_BLOCK:
-    	    lunghezza = 13;
-    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "File bloccato", lunghezza*sizeof(char))<=0) { free (msg.nome); return -1;}
+    		if (writen(fd_io, &msg, sizeof(int))<=0) {
+				errno = -1;
+				perror("ERRORE2: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+				}
+
     	break;
     	case OP_FFL_SUCH:
-    	   	lunghezza = 25;
-    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "File richiesto non esiste",lunghezza*sizeof(char))<=0) { free (msg.nome); return -1;}
+    		if (writen(fd_io, &msg, sizeof(int))<=0) {
+				errno = -1;
+				perror("ERRORE3: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+				}
     	break;
     	case OP_MSG_SIZE:
-    	    lunghezza = 22;
-    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "Messaggio troppo lungo", lunghezza*sizeof(char))<=0) { free (msg.nome); return -1;}
+    		if (writen(fd_io, &msg, sizeof(int))<=0) {
+				errno = -1;
+				perror("ERRORE4: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+				}
     	break;
     	case OP_END:
-    	    lunghezza = 48;
-    		if (writen(fd_io, &lunghezza, sizeof(int))<=0) { free (msg.nome); return -1;}
-    		if (writen(fd_io, "Raggiunto il massimo degli operazioni, attendere", lunghezza*sizeof(char))<=0) { free(msg.nome); return -1;}
+    		if (writen(fd_io, &msg.op, sizeof(ops))<=0) {
+				errno = -1;
+				perror("ERRORE0: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+				}
     	break;
     	default:
     		return -1;
@@ -235,32 +258,16 @@ int operation(int fd_io, msg_t msg) {
     return 0;
 }
 
-int readValue (int fd_io)
+int readValue(int fd_io)
 {
-	msg_t msg;
-
-    if (readn(fd_io, &msg.lNome, sizeof(int))<=0) return -1;
-    msg.nome = calloc(msg.lNome * sizeof(char), sizeof(char));
-    if (readn(fd_io, msg.nome, msg.lNome*sizeof(char))<=0) return -1;
-    printf("Nome: %s\n", msg.nome);
-
-    if (readn(fd_io, &msg.lStr, sizeof(int))<=0) return -1;
-    msg.str = calloc(msg.lStr * sizeof(char), sizeof(char));
-    if (readn(fd_io, msg.str, sizeof(char)*msg.lStr)<=0) return -1;
-    printf("testo: %s\n", msg.str);
-
-    if (readn(fd_io, &msg.op, sizeof(ops))>0) {printf("operazione: %d\n", msg.op); operation(fd_io,msg);}
-    else	return -1;
-
+	msg_t* msg = alloca(sizeof(msg_t));
+	if (readn(fd_io, msg, sizeof(msg_t))<=0){
+    	perror("ERRORE: lettura messaggio dal client");
+        return -1;
+    }
+	printf("operazione: %d\n", msg->op);
+ 	operation(fd_io,*msg);
     return 0;
-}
-
-// ritorno l'indice massimo tra i descrittori attivi
-int updatemax(fd_set set, int fdmax) {
-    for(int i=(fdmax-1);i>=0;--i)
-	if (FD_ISSET(i, &set)) return i;
-    assert(1==0);
-    return -1;
 }
 
 int main (int argc, char* argv[])
@@ -296,7 +303,7 @@ int main (int argc, char* argv[])
 	//	socket per I/O
 	int fd_c;
 	//set per descriptor attivi, tmpset copia del set per la select
-	fd_set set, tmpset;
+	fd_set tmpset;
 	//	serve solo per la macro exit  
 	int notused;
 
@@ -323,7 +330,7 @@ int main (int argc, char* argv[])
 	FD_SET(fd, &set);
 
 	//	il massimo dei descrittori
-	int fdmax = fd;
+	fdmax = fd;
 
 	//loop infinito
     for(;;) 

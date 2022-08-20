@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 199309L
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -5,11 +6,14 @@
 #include <getopt.h>
 #include <time.h>
 
+#include <API.h>
 #include <utils.h>
 #include <conn.h>
 #include <ops.h>
 
 #define MAX 2048
+
+char* SOCKET = NULL;
 
 void listaHelp(){
 	printf("Opzioni:\n\n");
@@ -30,37 +34,34 @@ void listaHelp(){
 	printf("-p: Abilita' le stampe in tutto il progetto.\n\n");
 }
 
-int parsing (int n, char** valori){
+void parsing (int n, char** valori){
+	struct timespec abstime;
 	int opt;
-	while ((opt = getopt(n,valori,"hfwWDrEdtlucp:")) != 1)
+
+	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1)
 		switch(opt) 
 		{
 			case 'h':
 				listaHelp();
-				return -1;
+				return;
 			break;
 			case 'f':
-			/*
-				// Il socket deve essere nella cartella
-				if (add_current_folder(&SOCKNAME, optarg) == -1){
-					errno = -1;
-					perror("ERROR: -f");
-					return -1;
-				}
 				//	Preparazione alla connessione
 				if ((clock_gettime(CLOCK_REALTIME, &abstime)) == -1){
 					errno = -1;
 					perror("ERROR: -f");
-					return -1;
+					return;
 				}
 				abstime.tv_sec += 2;
-				if (print) fprintf(stdout, "APERTURA CONNESSIONE A: %s \n", SOCKNAME);
-				if ((openConnection(SOCKNAME, 1000, abstime)) == -1){
+				fprintf(stdout, "APERTURA CONNESSIONE A: %s \n", optarg);
+				if ((openConnection(optarg, 1000, abstime)) == -1){
 					errno = ECONNREFUSED;
 					perror("openConnection");
-					return -1;
-				} else if(print) fprintf(stdout, "Connessione riuscita al socket\n\n");
-				*/
+					return;
+				}
+				SOCKET = alloca(strlen(optarg)+1);
+				strncpy(SOCKET, optarg, strlen(optarg)+1);
+				fprintf(stdout, "Connessione riuscita al socket\n");
 			break;
 			case 'w':
 
@@ -95,13 +96,18 @@ int parsing (int n, char** valori){
 			case 'p':
 
 			break;
-			default:
-				printf("Errore, lista dei comandi: \n");
+			case ':': 
+               	printf("Errore, lista dei comandi: \n");
 				listaHelp();
-				return -1;
+				return;
+			break;
+            case '?': 
+                printf("Errore, lista dei comandi: \n");
+				listaHelp();
+				return;
 			break;
 		}
-	return 0;
+	return;
 }
 
 
@@ -109,34 +115,12 @@ int main(int argc, char* argv[])
 {
 
 	char *buffer=NULL;
-	int tmp = 0;
-	
-	if ((tmp = parsing(argc,argv)) == 0){
-
-		/*
-		int lNome=strlen(nome)+1;
-		int lText=strlen(testo)+1;
-		SYSCALL_EXIT("writen", notused, writen(sockfd, &lNome, sizeof(int)), "write", "");
-		SYSCALL_EXIT("writen", notused, writen(sockfd, nome, lNome*sizeof(char)), "write", "");
-
-		SYSCALL_EXIT("writen", notused, writen(sockfd, &lText, sizeof(int)), "write", "");
-		SYSCALL_EXIT("writen", notused, writen(sockfd, testo, lText*sizeof(char)), "write", "");
-
-		SYSCALL_EXIT("writen", notused, writen(sockfd, &ope, sizeof(ops)), "write", "");
-
-		int l;
-		SYSCALL_EXIT("readn", notused, readn(sockfd, &l, sizeof(int)), "read","");
-		buffer = realloc(buffer, l*sizeof(char));
-		if (!buffer) 
-		{
-			perror("realloc");
-			fprintf(stderr, "Memoria esaurita....\n");
-		}
-
-		SYSCALL_EXIT("readn", notused, readn(sockfd, buffer, l*sizeof(char)), "read","");
-		printf("%s\n", buffer);
-		*/
-	}
+	parsing(argc,argv);
+	if(closeConnection(SOCKET) != 0)
+    {
+        perror("ERROR: Unable to close connection correctly with server");
+        exit(EXIT_FAILURE);
+    }
     if (buffer) free(buffer);
 	return 0;
 }

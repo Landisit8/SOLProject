@@ -1,5 +1,5 @@
 CC		=	gcc
-CFLAGS		+=	-std=c99 -Wall -Werror -g -pedantic
+CFLAGS		+=	-std=gnu99 -Wall -Werror -g -pedantic
 INCLUDES	=	-I. -I ./include
 LDFLAGS		=	-L.
 OPTFLAGS 	=
@@ -27,10 +27,10 @@ bob		: server.o lfucache.o
 server.o:	server.c lfucache.h
 lfucache.o: lfucache.c lfucache.h
 
-bau		: client.o
+bau		: client.o API.o
 	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) $^ -o $@
-client.o: client.c
-API.o: API.c
+client.o: client.c API.h
+API.o: API.c API.h
 
 clean		: 
 	rm -f $(TARGETS)

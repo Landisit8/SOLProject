@@ -1,7 +1,6 @@
 #if !defined(_UTIL_H)
 #define _UTIL_H
 
-
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -13,7 +12,10 @@
 #include <pthread.h>
 #include <errno.h>
 
+#include <ops.h>
+
 #define MAXS 1024
+#define MAXL 80000
 
 #if !defined(BUFSIZE)
 #define BUFSIZE 256
@@ -48,20 +50,18 @@
 	return r;                               \
     }
 
-#define CHECK_EQ_EXIT(name, X, val, str, ...)	\
+#define CHECK_EQ_EXIT(X, val, str)	\
     if ((X)==val) {				\
-        perror(#name);				\
-	int errno_copy = errno;			\
-	print_error(str, __VA_ARGS__);		\
-	exit(errno_copy);			\
+        perror(#str);			      \
+	      free(X);			     \
+	      exit(EXIT_FAILURE);			\
     }
 
-#define CHECK_NEQ_EXIT(name, X, val, str, ...)	\
-    if ((X)!=val) {				\
-        perror(#name);				\
-	int errno_copy = errno;			\
-	print_error(str, __VA_ARGS__);		\
-	exit(errno_copy);			\
+#define CHECK_NEQ_EXIT(X, val, str)	\
+    if ((X)!=val) {				      \
+        perror(#str);			  \
+	      free(X);			          \
+	      exit(EXIT_FAILURE);	\
     }
 
 /**
@@ -139,6 +139,24 @@ static inline int TRYLOCK(pthread_mutex_t* l) {
     pthread_exit((void*)EXIT_FAILURE);			    
   }								    
   return r;	
+}
+
+/** 
+ * tipo del messaggio
+ */
+typedef struct msg { 
+	char nome[MAXS];
+	ops op;
+  char str[MAXL];
+  int lNome;
+  int lStr;
+} msg_t;
+
+static inline void* alloca (size_t size){
+  void* alloca = malloc(size);
+  CHECK_EQ_EXIT(alloca, NULL, ERROR: malloc);
+  memset(alloca, 0, size);
+  return alloca;
 }
 
 #endif /* _UTIL_H */

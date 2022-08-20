@@ -14,6 +14,7 @@ typedef enum
 	CLOSE_OP	=	4,	//	RICHIESTA DI CHIUSURA DI UN FILE.
 	REMOVE_OP	=	5,	//	RICHIESTA DI RIMOZIONE DI UN FILE.
 	LOCK_OP		=	6,	//	CAMBIA LO STATO.
+	END_OP		=	7,	//	CHIUSURA COMMUNICAZIONE
 
 	/*
 	* \aggiungere qui eltre operazioni che si vogliono implementare
