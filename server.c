@@ -137,13 +137,19 @@ void message(int back, msg_t* msg)
 		case -3:
 			msg->op = OP_FFL_SUCH;
 		break;
+		//	Chiusurà colleggamento immediata
+		case -4:
+			printf("op vecchia: %d\n", msg->op);
+			msg->op = OP_END;
+			printf("op nuova: %d\n", msg->op);
+		break;
 	}
 }
 
 int operation(int fd_io, msg_t msg) {
 	printf("sono dentro operation\n");
 	int tmp;
-
+	printf("op di operation: %d\n", msg.op);
     switch(msg.op)
     {
     	case OPEN_OP:
@@ -196,21 +202,14 @@ int operation(int fd_io, msg_t msg) {
     	break;
 		case END_OP:
 			printf("sto eseguendo la chiusura del server\n");
-			close(fd_io);
-			if (fd_io == fdmax) {
-				fdmax = updatemax(set,fdmax);
-				message(0,&msg);
-				operation(fd_io,msg);
-			}
+			message(-4,&msg);
+			printf("Nuona operazione: %d", msg.op);
+			operation(fd_io,msg);
 		break;
     	case OP_OK:
-    		printf("sto mandando ok\n");
-			printf("ope: %d\n", msg.op);
-			printf("fd_io: %d\n", fd_io);
-			int ope = 10;
-    		if (writen(fd_io, &ope, sizeof(int))<=0) {
+    		if (writen(fd_io, &msg.op, sizeof(ops))<=0) {
 				errno = -1;
-				perror("ERRORE0: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
 				return -1;
 				}
     	break;
@@ -218,14 +217,14 @@ int operation(int fd_io, msg_t msg) {
     		printf("sto mandando no ok\n");
     		if (writen(fd_io, &msg, sizeof(int))<=0) {
 				errno = -1;
-				perror("ERRORE1: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				perror("ERRORE11: NON STO MANDANDO LA RISPOSTA AL CLIENT");
 				return -1;
 				}
     	break;
     	case OP_BLOCK:
     		if (writen(fd_io, &msg, sizeof(int))<=0) {
 				errno = -1;
-				perror("ERRORE2: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				perror("ERRORE12: NON STO MANDANDO LA RISPOSTA AL CLIENT");
 				return -1;
 				}
 
@@ -233,23 +232,27 @@ int operation(int fd_io, msg_t msg) {
     	case OP_FFL_SUCH:
     		if (writen(fd_io, &msg, sizeof(int))<=0) {
 				errno = -1;
-				perror("ERRORE3: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				perror("ERRORE13: NON STO MANDANDO LA RISPOSTA AL CLIENT");
 				return -1;
 				}
     	break;
     	case OP_MSG_SIZE:
     		if (writen(fd_io, &msg, sizeof(int))<=0) {
 				errno = -1;
-				perror("ERRORE4: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				perror("ERRORE14: NON STO MANDANDO LA RISPOSTA AL CLIENT");
 				return -1;
 				}
     	break;
     	case OP_END:
+			printf("Sono dentro OP_END");
     		if (writen(fd_io, &msg.op, sizeof(ops))<=0) {
 				errno = -1;
-				perror("ERRORE0: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				perror("ERRORE15: NON STO MANDANDO LA RISPOSTA AL CLIENT");
 				return -1;
 				}
+				close(fd_io);
+				if (fd_io == fdmax)
+				fdmax = updatemax(set,fdmax);
     	break;
     	default:
     		return -1;
