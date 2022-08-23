@@ -20,8 +20,7 @@ int sockfd;
  *	\
  *	\
 */
-int openConnection(const char* sockname, int msec, const struct timespec abstime)
-{
+int openConnection(const char* sockname, int msec, const struct timespec abstime){
 	errno = 0;
 	int ris = 0;
 
@@ -52,8 +51,7 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
  *	\
  *	\
 */
-int closeConnection(const char* sockname)
-{
+int closeConnection(const char* sockname){
 	errno = 0;
 
 	msg_t* sockClose = alloca(sizeof(msg_t));
@@ -69,7 +67,6 @@ int closeConnection(const char* sockname)
 	int ris = 0;
 
 	// ricevo risposta dal server
-	printf("sockfd: %d\n", sockfd);
 	if (readn(sockfd, &ris, sizeof(int)) <= 0){
 		errno = -1;
 		perror("ERROR: Messaggio non ricevuto dal server");
@@ -79,8 +76,8 @@ int closeConnection(const char* sockname)
 	// chiudo la connessione
 	close(sockfd);
 	// se il server risponde con "ok", chiusura' con successo
-	if(ris == OP_OK){
-		printf("Chiusura' eseguita con successo");
+	if(ris == OP_END){
+		printf("Chiusura' eseguita con successo\n");
 		return 0;
 	}
 	// errore di tipo risposta dal server

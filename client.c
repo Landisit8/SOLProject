@@ -34,7 +34,7 @@ void listaHelp(){
 	printf("-p: Abilita' le stampe in tutto il progetto.\n\n");
 }
 
-void parsing (int n, char** valori){
+int parsing (int n, char** valori){
 	struct timespec abstime;
 	int opt;
 
@@ -43,21 +43,21 @@ void parsing (int n, char** valori){
 		{
 			case 'h':
 				listaHelp();
-				return;
+				return -1;
 			break;
 			case 'f':
 				//	Preparazione alla connessione
 				if ((clock_gettime(CLOCK_REALTIME, &abstime)) == -1){
 					errno = -1;
 					perror("ERROR: -f");
-					return;
+					return -1;
 				}
 				abstime.tv_sec += 2;
 				fprintf(stdout, "APERTURA CONNESSIONE A: %s \n", optarg);
 				if ((openConnection(optarg, 1000, abstime)) == -1){
 					errno = ECONNREFUSED;
 					perror("openConnection");
-					return;
+					return -1;
 				}
 				SOCKET = alloca(strlen(optarg)+1);
 				strncpy(SOCKET, optarg, strlen(optarg)+1);
@@ -99,28 +99,27 @@ void parsing (int n, char** valori){
 			case ':': 
                	printf("Errore, lista dei comandi: \n");
 				listaHelp();
-				return;
+				return -1;
 			break;
             case '?': 
                 printf("Errore, lista dei comandi: \n");
 				listaHelp();
-				return;
+				return -1;
 			break;
 		}
-	return;
+	return 0;
 }
 
 
 int main(int argc, char* argv[])
 {
-
-	char *buffer=NULL;
-	parsing(argc,argv);
-	if(closeConnection(SOCKET) != 0)
-    {
-        perror("ERROR: Unable to close connection correctly with server");
-        exit(EXIT_FAILURE);
-    }
-    if (buffer) free(buffer);
+	int tmp;
+	tmp = parsing(argc,argv);
+	if (tmp == 0)
+		if(closeConnection(SOCKET) != 0)
+    	{
+        	perror("ERROR: Unable to close connection correctly with server");
+        	exit(EXIT_FAILURE);
+    	}
 	return 0;
 }

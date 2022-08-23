@@ -139,9 +139,7 @@ void message(int back, msg_t* msg)
 		break;
 		//	Chiusurà colleggamento immediata
 		case -4:
-			printf("op vecchia: %d\n", msg->op);
 			msg->op = OP_END;
-			printf("op nuova: %d\n", msg->op);
 		break;
 	}
 }
@@ -149,15 +147,12 @@ void message(int back, msg_t* msg)
 int operation(int fd_io, msg_t msg) {
 	printf("sono dentro operation\n");
 	int tmp;
-	printf("op di operation: %d\n", msg.op);
     switch(msg.op)
     {
     	case OPEN_OP:
     		printf("sto eseguendo la open\n");
     		tmp = openFile(&pRoot,msg.nome);
-    		printf("sto cambiando il messaggio\n");
     		message(tmp,&msg);
-    		printf("richiamo ricorsivamente\n");
     		printf("%d\n", msg.op);
     		operation(fd_io,msg);
     	break;
@@ -203,10 +198,10 @@ int operation(int fd_io, msg_t msg) {
 		case END_OP:
 			printf("sto eseguendo la chiusura del server\n");
 			message(-4,&msg);
-			printf("Nuona operazione: %d", msg.op);
 			operation(fd_io,msg);
 		break;
     	case OP_OK:
+			printf("Sto mandando ok\n");
     		if (writen(fd_io, &msg.op, sizeof(ops))<=0) {
 				errno = -1;
 				perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -244,7 +239,8 @@ int operation(int fd_io, msg_t msg) {
 				}
     	break;
     	case OP_END:
-			printf("Sono dentro OP_END");
+			fprintf(stderr, "sono dentro OP_END");
+			fflush(stderr);
     		if (writen(fd_io, &msg.op, sizeof(ops))<=0) {
 				errno = -1;
 				perror("ERRORE15: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -268,7 +264,6 @@ int readValue(int fd_io)
     	perror("ERRORE: lettura messaggio dal client");
         return -1;
     }
-	printf("operazione: %d\n", msg->op);
  	operation(fd_io,*msg);
     return 0;
 }
