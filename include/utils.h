@@ -22,141 +22,264 @@
 #endif
 
 #if !defined(EXTRA_LEN_PRINT_ERROR)
-#define EXTRA_LEN_PRINT_ERROR   512
+#define EXTRA_LEN_PRINT_ERROR 512
 #endif
 
-#define SYSCALL_EXIT(name, r, sc, str, ...)	\
-    if ((r=sc) == -1) {				\
-	perror(#name);				\
-	int errno_copy = errno;			\
-	print_error(str, __VA_ARGS__);		\
-	exit(errno_copy);			\
-    }
+#define SYSCALL_EXIT(name, r, sc, str, ...) \
+  if ((r = sc) == -1)                       \
+  {                                         \
+    perror(#name);                          \
+    int errno_copy = errno;                 \
+    print_error(str, __VA_ARGS__);          \
+    exit(errno_copy);                       \
+  }
 
-#define SYSCALL_PRINT(name, r, sc, str, ...)	\
-    if ((r=sc) == -1) {				\
-	perror(#name);				\
-	int errno_copy = errno;			\
-	print_error(str, __VA_ARGS__);		\
-	errno = errno_copy;			\
-    }
+#define SYSCALL_PRINT(name, r, sc, str, ...) \
+  if ((r = sc) == -1)                        \
+  {                                          \
+    perror(#name);                           \
+    int errno_copy = errno;                  \
+    print_error(str, __VA_ARGS__);           \
+    errno = errno_copy;                      \
+  }
 
-#define SYSCALL_RETURN(name, r, sc, str, ...)	\
-    if ((r=sc) == -1) {				\
-	perror(#name);				\
-	int errno_copy = errno;			\
-	print_error(str, __VA_ARGS__);		\
-	errno = errno_copy;			\
-	return r;                               \
-    }
+#define SYSCALL_RETURN(name, r, sc, str, ...) \
+  if ((r = sc) == -1)                         \
+  {                                           \
+    perror(#name);                            \
+    int errno_copy = errno;                   \
+    print_error(str, __VA_ARGS__);            \
+    errno = errno_copy;                       \
+    return r;                                 \
+  }
 
-#define CHECK_EQ_EXIT(X, val, str)	\
-    if ((X)==val) {				\
-        perror(#str);			      \
-	      free(X);			     \
-	      exit(EXIT_FAILURE);			\
-    }
+#define CHECK_EQ_EXIT(X, val, str) \
+  if ((X) == val)                  \
+  {                                \
+    perror(#str);                  \
+    free(X);                       \
+    exit(EXIT_FAILURE);            \
+  }
 
-#define CHECK_NEQ_EXIT(X, val, str)	\
-    if ((X)!=val) {				      \
-        perror(#str);			  \
-	      free(X);			          \
-	      exit(EXIT_FAILURE);	\
-    }
+#define CHECK_NEQ_EXIT(X, val, str) \
+  if ((X) != val)                   \
+  {                                 \
+    perror(#str);                   \
+    free(X);                        \
+    exit(EXIT_FAILURE);             \
+  }
 
 /**
  * \brief Procedura di utilita' per la stampa degli errori
  *
  */
-static inline void print_error(const char * str, ...) {
-    const char err[]="ERROR: ";
-    va_list argp;
-    char * p=(char *)malloc(strlen(str)+strlen(err)+EXTRA_LEN_PRINT_ERROR);
-    if (!p) {
-	perror("malloc");
-        fprintf(stderr,"FATAL ERROR nella funzione 'print_error'\n");
-        return;
-    }
-    strcpy(p,err);
-    strcpy(p+strlen(err), str);
-    va_start(argp, str);
-    vfprintf(stderr, p, argp);
-    va_end(argp);
-    free(p);
+static inline void print_error(const char *str, ...)
+{
+  const char err[] = "ERROR: ";
+  va_list argp;
+  char *p = (char *)malloc(strlen(str) + strlen(err) + EXTRA_LEN_PRINT_ERROR);
+  if (!p)
+  {
+    perror("malloc");
+    fprintf(stderr, "FATAL ERROR nella funzione 'print_error'\n");
+    return;
+  }
+  strcpy(p, err);
+  strcpy(p + strlen(err), str);
+  va_start(argp, str);
+  vfprintf(stderr, p, argp);
+  va_end(argp);
+  free(p);
 }
 
-
-/** 
+/**
  * \brief Controlla se la stringa passata come primo argomento e' un numero.
  * \return  0 ok  1 non e' un numbero   2 overflow/underflow
  */
-static inline int isNumber(const char* s, long* n) {
-  if (s==NULL) return 1;
-  if (strlen(s)==0) return 1;
-  char* e = NULL;
-  errno=0;
+static inline int isNumber(const char *s, long *n)
+{
+  if (s == NULL)
+    return 1;
+  if (strlen(s) == 0)
+    return 1;
+  char *e = NULL;
+  errno = 0;
   long val = strtol(s, &e, 10);
-  if (errno == ERANGE) return 2;    // overflow/underflow
-  if (e != NULL && *e == (char)0) {
+  if (errno == ERANGE)
+    return 2; // overflow/underflow
+  if (e != NULL && *e == (char)0)
+  {
     *n = val;
-    return 0;   // successo 
+    return 0; // successo
   }
-  return 1;   // non e' un numero
+  return 1; // non e' un numero
 }
 
-#define LOCK(l)      if (pthread_mutex_lock(l)!=0)        { \
-    fprintf(stderr, "ERRORE FATALE lock\n");		    \
-    pthread_exit((void*)EXIT_FAILURE);			    \
-  }   
-#define UNLOCK(l)    if (pthread_mutex_unlock(l)!=0)      { \
-  fprintf(stderr, "ERRORE FATALE unlock\n");		    \
-  pthread_exit((void*)EXIT_FAILURE);				    \
+#define LOCK(l)                              \
+  if (pthread_mutex_lock(l) != 0)            \
+  {                                          \
+    fprintf(stderr, "ERRORE FATALE lock\n"); \
+    pthread_exit((void *)EXIT_FAILURE);      \
   }
-#define WAIT(c,l)    if (pthread_cond_wait(c,l)!=0)       { \
-    fprintf(stderr, "ERRORE FATALE wait\n");		    \
-    pthread_exit((void*)EXIT_FAILURE);				    \
-}
+#define UNLOCK(l)                              \
+  if (pthread_mutex_unlock(l) != 0)            \
+  {                                            \
+    fprintf(stderr, "ERRORE FATALE unlock\n"); \
+    pthread_exit((void *)EXIT_FAILURE);        \
+  }
+#define WAIT(c, l)                           \
+  if (pthread_cond_wait(c, l) != 0)          \
+  {                                          \
+    fprintf(stderr, "ERRORE FATALE wait\n"); \
+    pthread_exit((void *)EXIT_FAILURE);      \
+  }
 /* ATTENZIONE: t e' un tempo assoluto! */
-#define TWAIT(c,l,t) {							\
-    int r=0;								\
-    if ((r=pthread_cond_timedwait(c,l,t))!=0 && r!=ETIMEDOUT) {		\
-      fprintf(stderr, "ERRORE FATALE timed wait\n");			\
-      pthread_exit((void*)EXIT_FAILURE);					\
-    }									\
+#define TWAIT(c, l, t)                                                \
+  {                                                                   \
+    int r = 0;                                                        \
+    if ((r = pthread_cond_timedwait(c, l, t)) != 0 && r != ETIMEDOUT) \
+    {                                                                 \
+      fprintf(stderr, "ERRORE FATALE timed wait\n");                  \
+      pthread_exit((void *)EXIT_FAILURE);                             \
+    }                                                                 \
   }
-#define SIGNAL(c)    if (pthread_cond_signal(c)!=0)       {	\
-    fprintf(stderr, "ERRORE FATALE signal\n");			\
-    pthread_exit((void*)EXIT_FAILURE);					\
+#define SIGNAL(c)                              \
+  if (pthread_cond_signal(c) != 0)             \
+  {                                            \
+    fprintf(stderr, "ERRORE FATALE signal\n"); \
+    pthread_exit((void *)EXIT_FAILURE);        \
   }
-#define BCAST(c)     if (pthread_cond_broadcast(c)!=0)    {		\
-    fprintf(stderr, "ERRORE FATALE broadcast\n");			\
-    pthread_exit((void*)EXIT_FAILURE);						\
+#define BCAST(c)                                  \
+  if (pthread_cond_broadcast(c) != 0)             \
+  {                                               \
+    fprintf(stderr, "ERRORE FATALE broadcast\n"); \
+    pthread_exit((void *)EXIT_FAILURE);           \
   }
-static inline int TRYLOCK(pthread_mutex_t* l) {
-  int r=0;		
-  if ((r=pthread_mutex_trylock(l))!=0 && r!=EBUSY) {		    
-    fprintf(stderr, "ERRORE FATALE unlock\n");		    
-    pthread_exit((void*)EXIT_FAILURE);			    
-  }								    
-  return r;	
+static inline int TRYLOCK(pthread_mutex_t *l)
+{
+  int r = 0;
+  if ((r = pthread_mutex_trylock(l)) != 0 && r != EBUSY)
+  {
+    fprintf(stderr, "ERRORE FATALE unlock\n");
+    pthread_exit((void *)EXIT_FAILURE);
+  }
+  return r;
 }
 
-/** 
+/**
  * tipo del messaggio
  */
-typedef struct msg { 
-	char nome[MAXS];
-	ops op;
+typedef struct msg
+{
+  char nome[MAXS];
+  ops op;
   char str[MAXL];
   int lNome;
   int lStr;
+  long fd_c;
+  struct msg *next;
 } msg_t;
 
-static inline void* alloca (size_t size){
-  void* alloca = malloc(size);
-  CHECK_EQ_EXIT(alloca, NULL, ERROR: malloc);
+typedef struct msgList
+{
+  msg_t *testa;
+  msg_t *coda;
+  size_t lung;
+} msg_l;
+
+static inline void msg_lStart(msg_l *list)
+{
+  list->testa = NULL;
+  list->coda = NULL;
+  list->lung = 0;
+}
+static inline void *alloca(size_t size)
+{
+  void *alloca = malloc(size);
+  CHECK_EQ_EXIT(alloca, NULL, ERROR
+                : malloc);
   memset(alloca, 0, size);
   return alloca;
+}
+
+static inline void msgHead(msg_t *head, msg_l *list)
+{
+  // empty list
+  if (list->lung == 0)
+  {
+    // head is the only element
+    list->testa = head;
+    list->coda = head;
+  }
+  else
+  {
+    // list has at least one element
+    // attach to the new node the old list
+    head->next = list->testa;
+    // now new node is the head of the list
+    list->testa = head;
+  }
+
+  // increase size of list
+  list->lung++;
+  return;
+}
+
+static inline void msgcpy(msg_t *destination, msg_t *source)
+{
+  destination->lNome = source->lNome;
+  destination->lStr = source->lStr;
+  destination->op = source->op;
+
+  memcpy(destination->nome, source->nome, strlen(source->nome));
+  memcpy(destination->str, source->str, source->lStr);
+
+  // destination->pid = source->pid;
+  destination->fd_c = source->fd_c;
+
+  destination->next = NULL;
+}
+
+static inline void msgPopReturn(msg_l *list, msg_t **toReturn)
+{
+  // if the list is null return
+  if (list->testa == NULL)
+    return;
+
+  msg_t *current = list->testa;
+
+  // the list has only one element
+  if (current->next == NULL)
+  {
+
+    // copy the element in the return node
+    msgcpy(*toReturn, current);
+    // free the only element of the list
+    free(current);
+
+    // set the list back to null
+    list->testa = NULL;
+    list->coda = NULL;
+    list->lung = list->lung - 1;
+    return;
+  }
+
+  // cycle the list until the second-last
+  while (current->next->next != NULL)
+  {
+    current = current->next;
+  }
+
+  // copying the last element
+  msgcpy(*toReturn, current->next);
+  // freeing it
+  free(current->next);
+  // updating the list
+  current->next = NULL;
+  list->coda = current;
+  list->lung = list->lung - 1;
+
+  return;
 }
 
 #endif /* _UTIL_H */
@@ -166,13 +289,13 @@ void print (nodo* n){
 
   if(n == NULL) return;
   printf("stampa elemento:\n");
-  
+
   printf("Frequenza: %d\n", n->freq);
   printf("Nome: %s\n", n->nome);
   printf("Testo: %s\n", n->testo);
   printf("Stato: %d\n", n->stato);
   printf("\n");
   print(n->left);
-  print(n->right);  
+  print(n->right);
 }
 */

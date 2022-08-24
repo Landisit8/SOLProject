@@ -3,7 +3,7 @@ CFLAGS		+=	-std=gnu99 -Wall -Werror -g -pedantic
 INCLUDES	=	-I. -I ./include
 LDFLAGS		=	-L.
 OPTFLAGS 	=
-LIBS		=	-lpthread	
+T_LIBS		=	-pthread	
 
 TARGETS 	=	server		\
 			client			\
@@ -15,7 +15,7 @@ TARGETS 	=	server		\
 .SUFFIXES: .c .h
 
 %: %.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) -o $@ $< $(LDFLAGS) $(T_LIBS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) -c -o $@ $<
