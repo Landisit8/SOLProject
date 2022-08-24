@@ -15,7 +15,7 @@ TARGETS 	=	server		\
 .SUFFIXES: .c .h
 
 %: %.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) -o $@ $< $(LDFLAGS) $(T_LIBS)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) -o $@ $< $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) -c -o $@ $<
@@ -23,7 +23,7 @@ TARGETS 	=	server		\
 all		: $(TARGETS)
 
 bob		: server.o lfucache.o
-	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) $(T_LIBS) $(OPTFLAGS) $^ -o $@
 server.o:	server.c lfucache.h
 lfucache.o: lfucache.c lfucache.h
 
