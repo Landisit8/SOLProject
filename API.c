@@ -90,6 +90,35 @@ int closeConnection(const char* sockname){
 */
 int openFile(const char* pathname, int flags)
 {
+	msg_t* open = alloca(sizeof(msg_t));
+	open->op = 0;
+	errno = 0;
+
+	//	lunghezza del pathname
+	int nameLen = strlen(pathname)+1;
+
+	strcpy(open->nome, pathname, nameLen);
+
+	open->nome[nameLen] = '\0';
+	open->lNome = nameLen;
+	
+	//	capire meglio utilizo del flags & 
+
+	//	mando il messaggio al server
+	if (writen(sockfd, open, sizeof(msg)) <= 0){
+		errno = -1;
+		perror("ERRORE: scrittura openFile");
+	}
+
+	//	ricevo il messaggio dal server
+	ops tmp;
+	if (readn(sockfd, &tmp, sizeof(ops)) <=0) {
+		errno = -1;
+		perror("ERRORE: lettura risposta openFile");
+		return -1;
+	}
+
+	if (tmp != OP_OK)	return -1;
 	return 0;
 }
 
@@ -100,6 +129,34 @@ int openFile(const char* pathname, int flags)
 */
 int readFile(const char* pathname, void** buf, size_t* size)
 {
+	msg_t read = alloca(sizeof(msg_t));
+	read.op = 1;
+
+	errno = 0;
+
+	int nameLen = strlen(pathname) + 1;
+
+	strcpy(read.nome, pathname, nameLen);
+
+	read.nome[nameLen] = '\0';
+	read.lNome = nameLen;
+
+	//	mando il messaggio al server
+	if (writen(sockfd, read, sizeof(msg_t)) <= 0){
+		errno = -1;
+		perror("ERRORE: scrittura readFile");
+		return -1;
+	}
+
+	//	ricevo il messaggio dal server
+	op tmp;
+	if (readn(sockfd, &tmp, sizeof(op))){
+		errno = -1;
+		perror("ERRORE: lettura risposta readFile");
+	}
+
+	if (tmp != OP_OK)	return -1;
+	
 	return 0;
 }
       
