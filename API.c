@@ -97,7 +97,7 @@ int openFile(const char* pathname, int flags)
 	//	lunghezza del pathname
 	int nameLen = strlen(pathname)+1;
 
-	strcpy(open->nome, pathname, nameLen);
+	strncpy(open->nome, pathname, nameLen);
 
 	open->nome[nameLen] = '\0';
 	open->lNome = nameLen;
@@ -105,7 +105,7 @@ int openFile(const char* pathname, int flags)
 	//	capire meglio utilizo del flags & 
 
 	//	mando il messaggio al server
-	if (writen(sockfd, open, sizeof(msg)) <= 0){
+	if (writen(sockfd, open, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: scrittura openFile");
 	}
@@ -118,7 +118,9 @@ int openFile(const char* pathname, int flags)
 		return -1;
 	}
 
-	if (tmp != OP_OK)	return -1;
+	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
+
+	printf("ok");
 	return 0;
 }
 
@@ -129,17 +131,17 @@ int openFile(const char* pathname, int flags)
 */
 int readFile(const char* pathname, void** buf, size_t* size)
 {
-	msg_t read = alloca(sizeof(msg_t));
-	read.op = 1;
+	msg_t* read = alloca(sizeof(msg_t));
+	read->op = 1;
 
 	errno = 0;
 
 	int nameLen = strlen(pathname) + 1;
 
-	strcpy(read.nome, pathname, nameLen);
+	strncpy(read->nome, pathname, nameLen);
 
-	read.nome[nameLen] = '\0';
-	read.lNome = nameLen;
+	read->nome[nameLen] = '\0';
+	read->lNome = nameLen;
 
 	//	mando il messaggio al server
 	if (writen(sockfd, read, sizeof(msg_t)) <= 0){
@@ -149,14 +151,15 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	}
 
 	//	ricevo il messaggio dal server
-	op tmp;
-	if (readn(sockfd, &tmp, sizeof(op))){
+	ops tmp;
+	if (readn(sockfd, &tmp, sizeof(ops))){
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
 
-	if (tmp != OP_OK)	return -1;
-	
+	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
+
+	printf("ok");
 	return 0;
 }
       
@@ -185,6 +188,34 @@ int appendToFile(const char* pathname, void* buf, size_t size, const char* dirna
 */
 int lockFile(const char* pathname)
 {
+	msg_t* lock = alloca(sizeof(msg_t));
+	lock->op = 6;	// da cambiare
+	errno = 0;
+
+	int nameLen = strlen(pathname) + 1;
+
+	strncpy(lock->nome, pathname, nameLen);
+
+	lock->nome[nameLen] = '\0';
+	lock->lNome = nameLen;
+	
+	//	mando il messaggio al server
+	if (writen(sockfd, lock, sizeof(msg_t)) <= 0){
+		errno = -1;
+		perror("ERRORE: scrittura lockFile");
+		return -1;
+	}
+
+	//	ricevo il messaggio dal server
+	ops tmp;
+	if (readn(sockfd, &tmp, sizeof(ops))){
+		errno = -1;
+		perror("ERRORE: lettura risposta lockFile");
+	}
+
+	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
+
+	printf("ok");
 	return 0;
 }
 
@@ -194,6 +225,34 @@ int lockFile(const char* pathname)
 */
 int unlockFile(const char* pathname)
 {
+	msg_t* unlock = alloca(sizeof(msg_t));
+	unlock->op = 6; // da cambiare
+	errno = 0;
+
+	int nameLen = strlen(pathname) + 1;
+
+	strncpy(unlock->nome, pathname, nameLen);
+
+	unlock->nome[nameLen] = '\0';
+	unlock->lNome = nameLen;
+
+	//	mando il messaggio al server
+	if (writen(sockfd, unlock, sizeof(msg_t)) <= 0){
+		errno = -1;
+		perror("ERRORE: scrittura lockFile");
+		return -1;
+	}
+
+	//	ricevo il messaggio dal server
+	ops tmp;
+	if (readn(sockfd, &tmp, sizeof(ops))){
+		errno = -1;
+		perror("ERRORE: lettura risposta lockFile");
+	}	
+
+	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
+
+	printf("ok");
 	return 0;
 }
 
@@ -203,6 +262,32 @@ int unlockFile(const char* pathname)
 */
 int closeFile(const char* pathname)
 {
+	msg_t* close = alloca(sizeof(msg_t));
+	close->op = 4;
+	errno = 0;
+
+	int nameLen = strlen(pathname) + 1;
+
+	strncpy(close->nome, pathname, nameLen);
+
+	close->nome[nameLen] = '\0';
+	close->lNome = nameLen;
+
+	//	mando il messaggio al server
+	if (writen(sockfd, close, sizeof(msg_t)) <= 0){
+		errno = -1;
+		perror("ERRORE: scrittura lockFile");
+		return -1;
+	}
+
+	//	ricevo il messaggio dal server
+	ops tmp;
+	if (readn(sockfd, &tmp, sizeof(ops))){
+		errno = -1;
+		perror("ERRORE: lettura risposta lockFile");
+	}	
+
+	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
 	return 0;
 }
 
@@ -212,5 +297,29 @@ int closeFile(const char* pathname)
 */
 int removeFile(const char* pathname)
 {
+	msg_t* remove = alloca(sizeof(msg_t));
+	remove->op = 5;
+	errno = 0;
+
+	int nameLen = strlen(pathname) + 1;
+
+	strncpy(remove->nome, pathname, nameLen);
+	remove->nome[nameLen] = '\0';
+
+	//	mando il messaggio al server
+	if (writen(sockfd, remove, sizeof(msg_t)) <= 0){
+		errno = -1;
+		perror("ERRORE: scrittura lockFile");
+		return -1;
+	}
+
+	//	ricevo il messaggio dal server
+	ops tmp;
+	if (readn(sockfd, &tmp, sizeof(ops))){
+		errno = -1;
+		perror("ERRORE: lettura risposta lockFile");
+	}	
+
+	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
 	return 0;
 }

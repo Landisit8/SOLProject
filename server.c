@@ -285,7 +285,7 @@ void *readValue(void *arg)
 	fprintf(stderr, "Dentro readValue\n");
 	for (;;)
 	{
-		msg_t *msg;
+		msg_t *msg = alloca(sizeof(msg_t));
 
 		pthread_mutex_lock(&richiesta);
 		pthread_cond_wait(&wait_attesa, &richiesta);
@@ -296,7 +296,7 @@ void *readValue(void *arg)
 
 		operation(msg->fd_c, *msg);
 
-		if (msg->op != 15)
+		if (msg->op != 7)
 		{
 			FD_SET(msg->fd_c, &set);
 		}
@@ -429,7 +429,7 @@ int main(int argc, char *argv[])
 
 				msg_t *rqs = alloca(sizeof(msg_t));
 
-				if (readn(fd_c, rqs, sizeof(msg_t)))
+				if (readn(fd_c, rqs, sizeof(msg_t)) <= 0)
 				{
 					perror("ERROR: lettura del messaggio");
 					return -1;
@@ -448,6 +448,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	close(fd);
+	unlink(sktname);
 	free(sktname);
 	return 0;
 }
