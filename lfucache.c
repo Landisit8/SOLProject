@@ -9,7 +9,7 @@ extern long memMax;
 extern long numMax;
 
 //	creazione di un nuovo nodo
-nodo* newNode (int freq, char* nome, char* testo, int stato)
+nodo* newNode (int freq, char* nome, char* testo, int stato, int lock)
 {
 	nodo* new;
 	if ((new = (nodo*) malloc(sizeof(nodo))) == NULL)	return NULL;	//	perror
@@ -19,6 +19,7 @@ nodo* newNode (int freq, char* nome, char* testo, int stato)
 	if ((new->testo = malloc(strlen(testo)* sizeof(char))) == NULL)	return NULL;	//	perror
 	strcpy(new->testo, testo);
 	new->stato = stato;
+	new->lucchetto = lock;
 	new->left = NULL;
 	new->right = NULL;
 
@@ -26,11 +27,11 @@ nodo* newNode (int freq, char* nome, char* testo, int stato)
 }
 
 //	aggiungo un valore nell'albero.
-nodo* addTree(nodo* n, int freq, char* nome, char* testo, int stato)
+nodo* addTree(nodo* n, int freq, char* nome, char* testo, int stato, int lock)
 {
-	if (n == NULL)	return newNode(freq,nome,testo,stato);
-	if (strlen(n->nome) >= strlen(nome))	n->left = addTree(n->left,freq,nome,testo,stato);
-	else	n->right = addTree(n->right,freq,nome,testo,stato);
+	if (n == NULL)	return newNode(freq,nome,testo,stato,lock);
+	if (strlen(n->nome) >= strlen(nome))	n->left = addTree(n->left,freq,nome,testo,stato,lock);
+	else	n->right = addTree(n->right,freq,nome,testo,stato,lock);
 	return n;
 }
 
@@ -74,7 +75,7 @@ nodo* findTreeFromName(nodo* n, char* str)
 int swapTree (nodo* a, nodo* b) 
 {
 	if (a == NULL || b == NULL)	return -1;
-	nodo* tmp = newNode(a->freq, a->nome, a->testo, a->stato);
+	nodo* tmp = newNode(a->freq, a->nome, a->testo, a->stato, a->lucchetto);
 
 	a->freq = b->freq;
 	strcpy(a->nome, b->nome);
@@ -108,7 +109,7 @@ nodo* isLeaf (nodo* parent)
 {
 	if (parent->left == NULL && parent->right == NULL)
 	{
-		nodo* tmp = newNode(parent->freq,parent->nome,parent->testo,parent->stato);
+		nodo* tmp = newNode(parent->freq,parent->nome,parent->testo,parent->stato, parent->lucchetto);
 		printf("sono madre\n");
 		return tmp;
 	}
@@ -219,12 +220,37 @@ void print (nodo* n){
   print(n->right);
 }
 
-int openFile(nodo* root, char* name)
+int openFile(nodo* root, char* name, int flags)
 {
+	printf("Sono dentro openFile\n");
+	printf("flags: %d \n", flags);
 	if (numMax == 0)	lfuRemove(root);
 	if (strcmp(name, "pRoot") == 0)	return -1;
-	if (findTreeFromName(root,name) == NULL){	addTree(root, 0, name, "", 0);	numMax--;}
-	else	return -1;
+	switch(flags){
+		case 0:
+			if (findTreeFromName(root,name) == NULL){	addTree(root, 0, name, "", 0, 0);	numMax--;}
+			else return -1;
+		break;
+		case 1:
+			changeLock(root, name, 1);
+			changeStatus(root, name, 0);
+		break;
+		case 2:
+			changeStatus(root, name, 0);
+		break;
+		case 3:
+			if (findTreeFromName(root,name) == NULL){
+				addTree(root, 0, name, "", 0, 0);
+				changeLock(root, name, 1);
+				changeStatus(root, name, 0);
+				numMax--;
+				}
+			else return -1;
+		break;
+		default:
+			return -1;
+		break;
+	}
 	return 0;
 }
 
@@ -255,10 +281,10 @@ int appendToFile(nodo* root, char* name, char* text)
 	return 0;
 }
 
-int writeFile(nodo* root, char* name, char* text) 
+int writeFile(nodo* root, char* name, char* text, pid_t act) 
 {
-	if ((findTreeFromName(root,name)) == NULL) {	openFile(root,name);	return appendToFile(root,name,text); }
-	else if (root->stato != 0)	return -2;
+	if ((findTreeFromName(root,name)) == NULL) {	openFile(root,name,0);	return appendToFile(root,name,text); }
+	else if (root->stato != 0 || (root->lucchetto != 0 && root->sLock != act))	return -2;
 	else	return appendToFile(root,name,text);
 }
 
@@ -292,9 +318,26 @@ int changeStatus(nodo* root, char* name, int lb)
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	if ((find = findTreeFromName(root,name)) == NULL)	return -3;
 	else {
-		if (lb == find->stato)	return -1;
+		if (lb == find->stato)	return 0;
+		//find->stato = lb;
 		if (find->stato == 0)	find->stato = 1;
 		else if (find->stato == 1)	find->stato = 0;
+		}
+
+	addFrequenza(find->freq);
+	return 0;
+}
+
+//	cambia lo stato del nodo
+int changeLock(nodo* root, char* name, int lb)
+{
+	nodo* find = NULL;
+	if (strcmp(name, "pRoot") == 0)	return -1;
+	if ((find = findTreeFromName(root,name)) == NULL)	return -3;
+	else {
+		if (lb == find->lucchetto)	return 0;
+		//if (find->stato == 0)	find->stato = 1;
+		//else if (find->stato == 1)	find->stato = 0;
 		}
 
 	addFrequenza(find->freq);

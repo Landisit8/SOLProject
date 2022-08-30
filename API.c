@@ -16,10 +16,6 @@
 
 int sockfd;
 
-/**
- *	\
- *	\
-*/
 int openConnection(const char* sockname, int msec, const struct timespec abstime){
 	errno = 0;
 	int ris = 0;
@@ -84,14 +80,12 @@ int closeConnection(const char* sockname){
 	return -1;
 }
 
-/**
- *	\
- *	\
-*/
+
 int openFile(const char* pathname, int flags)
 {
 	msg_t* open = alloca(sizeof(msg_t));
 	open->op = 0;
+	open->flags = flags;	// 0 creazione, 1 lock, 2 stato, 3 crei, lock e stato
 	errno = 0;
 
 	//	lunghezza del pathname
@@ -100,9 +94,9 @@ int openFile(const char* pathname, int flags)
 	strncpy(open->nome, pathname, nameLen);
 
 	open->nome[nameLen] = '\0';
-	open->lNome = nameLen;
-	
-	//	capire meglio utilizo del flags & 
+	open->lNome = nameLen; 
+
+	open->cLock = getpid();
 
 	//	mando il messaggio al server
 	if (writen(sockfd, open, sizeof(msg_t)) <= 0){
@@ -143,6 +137,8 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	read->nome[nameLen] = '\0';
 	read->lNome = nameLen;
 
+	read->cLock = getpid();
+
 	//	mando il messaggio al server
 	if (writen(sockfd, read, sizeof(msg_t)) <= 0){
 		errno = -1;
@@ -169,6 +165,48 @@ int readFile(const char* pathname, void** buf, size_t* size)
 */
 int writeFile(const char* pathname, const char* dirname)
 {
+	msg_t* write = alloca(sizeof(msg_t));
+	write->op = 2;
+	errno = 0;
+
+	int nameLen = strlen(pathname) + 1;
+
+	strncpy(write->nome, pathname, nameLen);
+
+	write->nome[nameLen] = '\0';
+	write->lNome = nameLen;
+/*
+	long fileLen;
+	char* buf;
+
+	if ((buf = readFile(pathname, &fileLen)) == NULL){
+		errno = -1;
+		perror("ERROR: Lettura di readFile");
+		return -1;
+	}
+
+	memcpy(write->str, buf, fileLen);
+*/
+	//pid
+	write->cLock = getpid();
+	
+	//	mando il messaggio al server
+	if (writen(sockfd, write, sizeof(msg_t)) <= 0){
+		errno = -1;
+		perror("ERRORE: scrittura readFile");
+		return -1;
+	}
+
+	//	ricevo il messaggio dal server
+	ops tmp;
+	if (readn(sockfd, &tmp, sizeof(ops))){
+		errno = -1;
+		perror("ERRORE: lettura risposta readFile");
+	}
+
+	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
+
+	printf("ok");
 	return 0;
 }
 
@@ -198,6 +236,8 @@ int lockFile(const char* pathname)
 
 	lock->nome[nameLen] = '\0';
 	lock->lNome = nameLen;
+
+	lock->cLock = getpid();
 	
 	//	mando il messaggio al server
 	if (writen(sockfd, lock, sizeof(msg_t)) <= 0){
@@ -236,6 +276,8 @@ int unlockFile(const char* pathname)
 	unlock->nome[nameLen] = '\0';
 	unlock->lNome = nameLen;
 
+	unlock->cLock = getpid();
+
 	//	mando il messaggio al server
 	if (writen(sockfd, unlock, sizeof(msg_t)) <= 0){
 		errno = -1;
@@ -273,6 +315,8 @@ int closeFile(const char* pathname)
 	close->nome[nameLen] = '\0';
 	close->lNome = nameLen;
 
+	close->cLock = getpid();
+
 	//	mando il messaggio al server
 	if (writen(sockfd, close, sizeof(msg_t)) <= 0){
 		errno = -1;
@@ -305,6 +349,8 @@ int removeFile(const char* pathname)
 
 	strncpy(remove->nome, pathname, nameLen);
 	remove->nome[nameLen] = '\0';
+
+	remove->cLock = getpid();
 
 	//	mando il messaggio al server
 	if (writen(sockfd, remove, sizeof(msg_t)) <= 0){

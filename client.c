@@ -64,9 +64,9 @@ int parsing (int n, char** valori){
 				fprintf(stdout, "Connessione riuscita al socket\n");
 			break;
 			case 'w':
-					if ((openFile(optarg,0)) == -1){
+					if ((openFile(optarg,3)) == -1){
 					errno = ECONNREFUSED;
-					perror("openConnection");
+					perror("openFile");
 					return -1;
 				}
 			break;

@@ -11,7 +11,9 @@ typedef struct tree{
 	int freq;				//	frequenza, il numero di volte che un file viene fatta una qualsiasi operazione
 	char* nome;		
 	char* testo;
-	int stato;				//	stato, indica se un file e' chiuso o aperto
+	int stato;				//	stato, indica se un file e' chiuso(1) o aperto(0)
+	int lucchetto;			//	lucchetto, indica se un file è lock(0) or unlock(1)
+	pid_t sLock;
 	struct tree *left;
 	struct tree *right;
 } nodo;
@@ -19,13 +21,13 @@ typedef struct tree{
 /** 
  * \crea un nuovo nodo   
 */
-nodo* newNode(int freq, char* nome, char* testo, int stato);
+nodo* newNode(int freq, char* nome, char* testo, int stato, int lock);
 
 /** 
  * \aggiungo un valore nell'albero.
  * \return n ok  NULL non esiste l'albero   
 */
-nodo* addTree(nodo* n, int freq, char* nome, char* testo, int stato);
+nodo* addTree(nodo* n, int freq, char* nome, char* testo, int stato, int lock);
 
 /** 
  * \Ricerco il minimo valore nell'intero albero e salvo l'informazione in min e name.
@@ -86,10 +88,21 @@ int addFreqquenza(int fre);
 int changeStatus(nodo* root, char* name, int lb);
 
 /** 
- * \
- * \ 
+ * \cambia lo stato del lucchetto
+ * \return il valore cambiato dello stato //lb operazione
 */
-int openFile(nodo* root, char* name);
+int changeLock(nodo* root, char* name, int lb);
+
+/** 
+ * \ A seconda del valore di flags ci sono 4 opzioni diverse
+ * 0: creazione di un nuovo nodo, in caso che l'elemento esista già ritorna errore.
+ * 1: rendo aperto lo stato e lock la Lock.
+ * 2: cambio solo lo stato.
+ * 3: faccio tutte le opzioni indicate prima.
+ * defalut: Tipologia di errore di valore in ingresso.
+ * \return 0 in caso di successo o si blocca prima nel caso delle funzioni dichiarate.
+*/
+int openFile(nodo* root, char* name, int flags);
 
 /** 
  * \
@@ -107,7 +120,7 @@ int appendToFile(nodo* root, char* name, char* text);
  * \
  * \ 
 */
-int writeFile(nodo* root, char* name, char* text);
+int writeFile(nodo* root, char* name, char* text, pid_t act);
 
 void print (nodo* n);
 

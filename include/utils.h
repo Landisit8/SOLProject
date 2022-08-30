@@ -177,6 +177,8 @@ typedef struct msg
   int lNome;
   int lStr;
   long fd_c;
+  int flags;
+  pid_t cLock;
   struct msg *next;
 } msg_t;
 
@@ -230,6 +232,8 @@ static inline void msgcpy(msg_t *destination, msg_t *source)
   destination->lNome = source->lNome;
   destination->lStr = source->lStr;
   destination->op = source->op;
+  destination->flags = source->flags;
+  destination->cLock = source->cLock;
 
   memcpy(destination->nome, source->nome, strlen(source->nome));
   memcpy(destination->str, source->str, source->lStr);

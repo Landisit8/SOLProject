@@ -31,7 +31,7 @@ msg_l *attesa;
 pthread_mutex_t richiesta = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t wait_attesa = PTHREAD_COND_INITIALIZER;
 
-nodo pRoot = {0, "pRoot", "abcd", 1, NULL, NULL};
+nodo pRoot = {0, "pRoot", "abcd", 1, 1, 0, NULL, NULL,};
 
 void cleanup()
 {
@@ -168,9 +168,8 @@ int operation(int fd_io, msg_t msg)
 	{
 	case OPEN_OP:
 		printf("sto eseguendo la open\n");
-		tmp = openFile(&pRoot, msg.nome);
+		tmp = openFile(&pRoot, msg.nome, msg.flags);
 		message(tmp, &msg);
-		printf("%d\n", msg.op);
 		operation(fd_io, msg);
 		break;
 	case READ_OP:
@@ -181,7 +180,7 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case WRITE_OP:
 		printf("sto eseguendo la write\n");
-		tmp = writeFile(&pRoot, msg.nome, msg.str);
+		tmp = writeFile(&pRoot, msg.nome, msg.str, msg.cLock);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
@@ -291,7 +290,6 @@ void *readValue(void *arg)
 		pthread_cond_wait(&wait_attesa, &richiesta);
 		msgPopReturn(attesa, &msg);
 
-		fprintf(stderr, "prelevo coda\n");
 		pthread_mutex_unlock(&richiesta);
 
 		operation(msg->fd_c, *msg);
@@ -308,9 +306,9 @@ void *readValue(void *arg)
 int main(int argc, char *argv[])
 {
 	long thrw;
-	addTree(&pRoot, 0, "ema", "gay", 0);
-	addTree(&pRoot, 5, "amelia", "hola", 0);
-	addTree(&pRoot, 7, "fede", "bello", 0);
+	addTree(&pRoot, 0, "ema", "gay", 0, 0);
+	addTree(&pRoot, 5, "amelia", "hola", 0, 1);
+	addTree(&pRoot, 7, "fede", "bello", 1, 0);
 
 	//	controllo se file config non esiste
 	if ((sktname = malloc(MAXS * sizeof(char))) == NULL)
@@ -412,19 +410,6 @@ int main(int argc, char *argv[])
 					printf("Nuovo max: %d\n", fdmax);
 					continue;
 				}
-				/*
-				fd_c = fd_s; // e' una nuova richiesta da un client già connesso
-				// eseguo il comando e se c'e' un errore lo tolgo dal master set
-				if (readValue(fd_c) < 0)
-				{
-					close(fd_c);
-					FD_CLR(fd_c, &set);
-					// controllo se deve aggiornare il massimo
-					// senza questo gli fd risultano sempre in richiesta di attenzione non so perchè
-					if (fd_c == fdmax)
-						fdmax = updatemax(set, fdmax);
-				}
-				*/
 				fd_c = fd_s;
 
 				msg_t *rqs = alloca(sizeof(msg_t));
