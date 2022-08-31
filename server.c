@@ -267,7 +267,6 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case OP_END:
-		fprintf(stderr, "sono dentro OP_END");
 		fflush(stderr);
 		if (writen(fd_io, &msg.op, sizeof(ops)) <= 0)
 		{
@@ -300,7 +299,8 @@ void *readValue(void *arg)
 		pthread_mutex_unlock(&richiesta);
 
 		operation(msg->fd_c, *msg);
-
+		//ATTENZIONE DA CONTROLARE IL NO SENSE
+		fprintf(stderr, "\nop: %d\n", msg->op);
 		if (msg->op != 7)
 		{
 			FD_SET(msg->fd_c, &set);
@@ -313,9 +313,9 @@ void *readValue(void *arg)
 int main(int argc, char *argv[])
 {
 	long thrw;
-	addTree(&pRoot, 0, "ema", "gay", 0, 0);
+	addTree(&pRoot, 0, "ema", "gay", 0, 1);
 	addTree(&pRoot, 5, "amelia", "hola", 0, 1);
-	addTree(&pRoot, 7, "fede", "bello", 1, 0);
+	addTree(&pRoot, 7, "fede", "bello", 0, 0);
 
 	//	controllo se file config non esiste
 	if ((sktname = malloc(MAXS * sizeof(char))) == NULL)

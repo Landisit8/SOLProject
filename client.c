@@ -101,19 +101,24 @@ int parsing (int n, char** valori){
 
 			break;
 			case 'l':
-			r = unlockFile(optarg);
+			
+
+			break;
+			case 'u':
+				r = unlockFile(optarg);
 				if (r == -1){
 					errno = ECONNREFUSED;
 					perror("unlockFile");
 					return -1;
 				}
-
-			break;
-			case 'u':
-
 			break;
 			case 'c':
-
+				r = closeFile(optarg);
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("unlockFile");
+					return -1;
+				}
 			break;
 			case 'p':
 

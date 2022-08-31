@@ -316,14 +316,14 @@ int fileRemove(nodo* root, char* nome)
 	return 0;
 }
 
-//	cambia lo stato del nodo
+//	cambia lo stato del nodo (0 aperto - 1 chiuso)
 int changeStatus(nodo* root, char* name, int lb)
 {
 	nodo* find = NULL;
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	if ((find = findTreeFromName(root,name)) == NULL)	return -3;
 	else {
-		if (lb == find->stato)	return 0;
+		if (lb == find->stato)	return -2;
 		//find->stato = lb;
 		if (find->stato == 0)	find->stato = 1;
 		else if (find->stato == 1)	find->stato = 0;
@@ -333,7 +333,7 @@ int changeStatus(nodo* root, char* name, int lb)
 	return 0;
 }
 
-//	cambia lo stato del nodo
+//	cambia lo stato del nodo (1 Unlock - 0 Lock)
 int changeLock(nodo* root, char* name, int lb, pid_t cLock)
 {
 	nodo* find = NULL;
