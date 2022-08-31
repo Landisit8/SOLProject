@@ -220,7 +220,7 @@ void print (nodo* n){
   print(n->right);
 }
 
-int openFile(nodo* root, char* name, int flags)
+int openFile(nodo* root, char* name, int flags, pid_t cLock)
 {
 	printf("Sono dentro openFile\n");
 	printf("flags: %d \n", flags);
@@ -232,7 +232,7 @@ int openFile(nodo* root, char* name, int flags)
 			else return -1;
 		break;
 		case 1:
-			changeLock(root, name, 1);
+			changeLock(root, name, 1, cLock);
 			changeStatus(root, name, 0);
 		break;
 		case 2:
@@ -241,7 +241,7 @@ int openFile(nodo* root, char* name, int flags)
 		case 3:
 			if (findTreeFromName(root,name) == NULL){
 				addTree(root, 0, name, "", 0, 0);
-				changeLock(root, name, 1);
+				changeLock(root, name, 1, cLock);
 				changeStatus(root, name, 0);
 				numMax--;
 				}
@@ -254,12 +254,17 @@ int openFile(nodo* root, char* name, int flags)
 	return 0;
 }
 
-int readFile(nodo* root, char* name)
+int readFile(nodo* root, char* name, msg_t* text)
 {
+	nodo* tmp;
 	if (strcmp(name, "pRoot") == 0)	return -1;
-	if (findTreeFromName(root,name) == NULL)	return -3;
-	else if (root->stato != 0)	return -2;
-	else addFrequenza(root->freq);	
+	if ((tmp = findTreeFromName(root,name)) == NULL)	return -3;
+	else if (tmp->stato != 0)	return -2;
+	else addFrequenza(tmp->freq);
+	strncpy(text->str,tmp->testo, strlen(tmp->testo));
+	text->lStr = strlen(tmp->testo);
+	strncpy(text->nome,tmp->nome, strlen(tmp->nome));
+	text->lNome = strlen(tmp->nome);
 	return 0;
 }
 
@@ -281,10 +286,10 @@ int appendToFile(nodo* root, char* name, char* text)
 	return 0;
 }
 
-int writeFile(nodo* root, char* name, char* text, pid_t act) 
+int writeFile(nodo* root, char* name, char* text, pid_t cLock) 
 {
-	if ((findTreeFromName(root,name)) == NULL) {	openFile(root,name,0);	return appendToFile(root,name,text); }
-	else if (root->stato != 0 || (root->lucchetto != 0 && root->sLock != act))	return -2;
+	if ((findTreeFromName(root,name)) == NULL) {	openFile(root,name,0,cLock);	return appendToFile(root,name,text); }
+	else if (root->stato != 0 || (root->lucchetto != 0 && root->sLock != cLock))	return -2;
 	else	return appendToFile(root,name,text);
 }
 
@@ -329,15 +334,26 @@ int changeStatus(nodo* root, char* name, int lb)
 }
 
 //	cambia lo stato del nodo
-int changeLock(nodo* root, char* name, int lb)
+int changeLock(nodo* root, char* name, int lb, pid_t cLock)
 {
 	nodo* find = NULL;
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	if ((find = findTreeFromName(root,name)) == NULL)	return -3;
 	else {
-		if (lb == find->lucchetto)	return 0;
-		//if (find->stato == 0)	find->stato = 1;
-		//else if (find->stato == 1)	find->stato = 0;
+			//	UNLOCK
+			if (lb == 1){
+				if (find->sLock == cLock)
+					find->lucchetto = 1;
+			}
+			//	LOCK
+			if (lb == 0){
+				if (find->lucchetto == 0)
+					return -2;
+				else{
+					find->lucchetto = 0;
+					find->sLock = cLock;
+				}
+			}
 		}
 
 	addFrequenza(find->freq);

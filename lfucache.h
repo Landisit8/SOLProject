@@ -91,7 +91,7 @@ int changeStatus(nodo* root, char* name, int lb);
  * \cambia lo stato del lucchetto
  * \return il valore cambiato dello stato //lb operazione
 */
-int changeLock(nodo* root, char* name, int lb);
+int changeLock(nodo* root, char* name, int lb, pid_t cLock);
 
 /** 
  * \ A seconda del valore di flags ci sono 4 opzioni diverse
@@ -102,13 +102,13 @@ int changeLock(nodo* root, char* name, int lb);
  * defalut: Tipologia di errore di valore in ingresso.
  * \return 0 in caso di successo o si blocca prima nel caso delle funzioni dichiarate.
 */
-int openFile(nodo* root, char* name, int flags);
+int openFile(nodo* root, char* name, int flags, pid_t cLock);
 
 /** 
  * \
  * \ 
 */
-int readFile(nodo* root, char* name);
+int readFile(nodo* root, char* name, msg_t* text);
 
 /** 
  * \
@@ -120,7 +120,7 @@ int appendToFile(nodo* root, char* name, char* text);
  * \
  * \ 
 */
-int writeFile(nodo* root, char* name, char* text, pid_t act);
+int writeFile(nodo* root, char* name, char* text, pid_t cLock);
 
 void print (nodo* n);
 

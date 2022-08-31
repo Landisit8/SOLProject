@@ -147,15 +147,18 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	}
 
 	//	ricevo il messaggio dal server
-	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops))){
+	msg_t tmp;
+	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
+	
+	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 
-	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
-
-	printf("ok");
+	*size = tmp.lStr;
+	char *tmp_buf = alloca((*size));
+	strncpy(tmp_buf, tmp.str, tmp.lStr);
+	*buf = (void*)tmp_buf;
 	return 0;
 }
       
@@ -199,7 +202,7 @@ int writeFile(const char* pathname, const char* dirname)
 
 	//	ricevo il messaggio dal server
 	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops))){
+	if (readn(sockfd, &tmp, sizeof(ops)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
@@ -227,7 +230,7 @@ int appendToFile(const char* pathname, void* buf, size_t size, const char* dirna
 int lockFile(const char* pathname)
 {
 	msg_t* lock = alloca(sizeof(msg_t));
-	lock->op = 6;	// da cambiare
+	lock->op = 6;
 	errno = 0;
 
 	int nameLen = strlen(pathname) + 1;
@@ -248,7 +251,7 @@ int lockFile(const char* pathname)
 
 	//	ricevo il messaggio dal server
 	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops))){
+	if (readn(sockfd, &tmp, sizeof(ops)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}
@@ -287,7 +290,7 @@ int unlockFile(const char* pathname)
 
 	//	ricevo il messaggio dal server
 	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops))){
+	if (readn(sockfd, &tmp, sizeof(ops)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}	
@@ -326,7 +329,7 @@ int closeFile(const char* pathname)
 
 	//	ricevo il messaggio dal server
 	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops))){
+	if (readn(sockfd, &tmp, sizeof(ops)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}	
@@ -361,7 +364,7 @@ int removeFile(const char* pathname)
 
 	//	ricevo il messaggio dal server
 	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops))){
+	if (readn(sockfd, &tmp, sizeof(ops)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}	

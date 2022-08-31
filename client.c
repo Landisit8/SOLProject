@@ -37,6 +37,9 @@ void listaHelp(){
 int parsing (int n, char** valori){
 	struct timespec abstime;
 	int opt;
+	void* buf = NULL;
+	size_t sz;
+	int r;
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1)
 		switch(opt) 
@@ -76,18 +79,34 @@ int parsing (int n, char** valori){
 
 			break;
 			case 'r':
-
+				r = readFile(optarg, &buf, &sz);
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("readFile");
+					return -1;
+				}
 			break;
 			case 'R':
 
 			break;
 			case 'd':
-
+			r = lockFile(optarg);
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("lockFile");
+					return -1;
+				}
 			break;
 			case 't':
 
 			break;
 			case 'l':
+			r = unlockFile(optarg);
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("unlockFile");
+					return -1;
+				}
 
 			break;
 			case 'u':

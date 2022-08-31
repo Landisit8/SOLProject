@@ -145,7 +145,7 @@ void message(int back, msg_t *msg)
 	case -1:
 		msg->op = OP_FOK;
 		break;
-	//	la funzione e' bloccata dallo stato
+	//	la funzione e' bloccata dallo stato o dalla lock
 	case -2:
 		msg->op = OP_BLOCK;
 		break;
@@ -164,19 +164,26 @@ int operation(int fd_io, msg_t msg)
 {
 	printf("sono dentro operation\n");
 	int tmp;
+	msg_t re;
 	switch (msg.op)
 	{
 	case OPEN_OP:
 		printf("sto eseguendo la open\n");
-		tmp = openFile(&pRoot, msg.nome, msg.flags);
+		tmp = openFile(&pRoot, msg.nome, msg.flags, msg.cLock);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case READ_OP:
+	//	caso particolare per mandare anche il testo insieme alla risposta
 		printf("sto eseguendo la read\n");
-		tmp = readFile(&pRoot, msg.nome);
-		message(tmp, &msg);
-		operation(fd_io, msg);
+		tmp = readFile(&pRoot, msg.nome, &re);
+		message(tmp, &re);
+		if (writen(fd_io, &re, sizeof(msg_t)) <= 0)
+		{
+			errno = -1;
+			perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+			return -1;
+		}
 		break;
 	case WRITE_OP:
 		printf("sto eseguendo la write\n");
@@ -206,8 +213,8 @@ int operation(int fd_io, msg_t msg)
 		operation(fd_io, msg);
 		break;
 	case LOCK_OP:
-		printf("sto eseguendo la stato :)\n");
-		tmp = changeStatus(&pRoot, msg.nome, 0);
+		printf("sto eseguendo la lock :)\n");
+		tmp = changeLock(&pRoot, msg.nome, 0, msg.cLock);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
