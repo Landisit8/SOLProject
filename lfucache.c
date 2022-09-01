@@ -181,7 +181,7 @@ int lfuRemove(nodo* n)
 	nodo* find = NULL;
 	nodo* leaf = NULL;
 	
-	//	cerco il nodo minimo e trovp il nome
+	//	cerco il nodo minimo e trovo il nome
 	if (!findTreeMin(n,&min,&name))	return -3;
 	printf("Minima frequenza: %d\n", min);
 	printf("nome utente: %s\n", name);
@@ -228,21 +228,21 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock)
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	switch(flags){
 		case 0:
-			if (findTreeFromName(root,name) == NULL){	addTree(root, 0, name, "", 0, 0);	numMax--;}
+			if (findTreeFromName(root,name) == NULL){	addTree(root, 0, name, "", 0, 1);	numMax--;}
 			else return -1;
 		break;
 		case 1:
 			changeLock(root, name, 1, cLock);
-			changeStatus(root, name, 0);
+			changeStatus(root, name, 0, cLock);
 		break;
 		case 2:
-			changeStatus(root, name, 0);
+			changeStatus(root, name, 0,cLock);
 		break;
 		case 3:
 			if (findTreeFromName(root,name) == NULL){
 				addTree(root, 0, name, "", 0, 0);
 				changeLock(root, name, 1, cLock);
-				changeStatus(root, name, 0);
+				changeStatus(root, name, 0, cLock);
 				numMax--;
 				}
 			else return -1;
@@ -254,12 +254,12 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock)
 	return 0;
 }
 
-int readFile(nodo* root, char* name, msg_t* text)
+int readFile(nodo* root, char* name, msg_t* text, pid_t cLock)
 {
 	nodo* tmp;
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	if ((tmp = findTreeFromName(root,name)) == NULL)	return -3;
-	else if (tmp->stato != 0)	return -2;
+	else if (tmp->stato != 0 || (tmp->lucchetto == 0 && tmp->sLock != cLock))	return -2;
 	else addFrequenza(tmp->freq);
 	strncpy(text->str,tmp->testo, strlen(tmp->testo));
 	text->lStr = strlen(tmp->testo);
@@ -268,16 +268,16 @@ int readFile(nodo* root, char* name, msg_t* text)
 	return 0;
 }
 
-int appendToFile(nodo* root, char* name, char* text)
+int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 {
 	printf("sto eseguendo la append\n");
 	nodo* find = NULL;
 	if ((find = findTreeFromName(root,name)) == NULL)	return -3;
-	else if (find->stato != 0)	return -2;
+	else if (find->stato != 0 || (find->lucchetto == 0 && find->sLock != cLock))	return -2;
 	else
 	{
 		int somma = strlen(find->testo) + strlen(text);
-		find->testo = realloc(find->testo, somma+1);
+		CHECK_EQ_EXIT(find->testo = realloc(find->testo, somma+1), NULL, ERROR: malloc);
 		strncat(find->testo, text, somma);
 		memMax = memMax - strlen(find->testo);
 		if (memMax <= 0)	{printf("sto cancellando....\n"); lfuRemove(find);}
@@ -288,14 +288,17 @@ int appendToFile(nodo* root, char* name, char* text)
 
 int writeFile(nodo* root, char* name, char* text, pid_t cLock) 
 {
-	if ((findTreeFromName(root,name)) == NULL) {	openFile(root,name,0,cLock);	return appendToFile(root,name,text); }
-	else if (root->stato != 0 || (root->lucchetto != 0 && root->sLock != cLock))	return -2;
-	else	return appendToFile(root,name,text);
+	nodo* find = NULL;
+	if ((find = findTreeFromName(root,name)) == NULL) {	
+		openFile(root,name,0,cLock);	
+		return appendToFile(root,name,text,cLock); 
+		}
+	else	return -1;
 }
 
-//	cerca il nome nel nodo poi si cerca una foglia qualsisi e con le considerazioni della funzione searchLeaf
+//	cerca il nome nel nodo poi si cerca una foglia qualsiasi e con le considerazioni della funzione searchLeaf
 //	si scambia con la foglia e cancello la foglia 
-int fileRemove(nodo* root, char* nome)
+int fileRemove(nodo* root, char* nome, pid_t cLock)
 {
 	if (root == NULL)	return -1;
 
@@ -306,6 +309,7 @@ int fileRemove(nodo* root, char* nome)
 
 	if (!(find = findTreeFromName(root,nome)))	return -3;
 	if (find->stato != 0)	return -2;
+	if (find->lucchetto == 0 && find->sLock != cLock)	return -2;
 
 	if (!(leaf = searchLeaf(root)))	return -3;
 
@@ -317,11 +321,12 @@ int fileRemove(nodo* root, char* nome)
 }
 
 //	cambia lo stato del nodo (0 aperto - 1 chiuso)
-int changeStatus(nodo* root, char* name, int lb)
+int changeStatus(nodo* root, char* name, int lb, pid_t cLock)
 {
 	nodo* find = NULL;
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	if ((find = findTreeFromName(root,name)) == NULL)	return -3;
+	if (find->lucchetto == 0 && find->sLock != cLock)	return -2;
 	else {
 		if (lb == find->stato)	return -2;
 		//find->stato = lb;

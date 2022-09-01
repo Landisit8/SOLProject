@@ -31,6 +31,11 @@ int readFile(const char* pathname, void** buf, size_t* size);
  *	\
  *	\
 */
+char* readBytes(const char* name, long* filelen);
+/**
+ *	\
+ *	\
+*/
 int writeFile(const char* pathname, const char* dirname);
 /**
  *	\

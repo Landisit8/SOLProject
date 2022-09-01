@@ -40,27 +40,26 @@ int parsing (int n, char** valori){
 	void* buf = NULL;
 	size_t sz;
 	int r;
+	char* token;
+	char* file;
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1)
 		switch(opt) 
 		{
 			case 'h':
 				listaHelp();
-				return -1;
 			break;
 			case 'f':
 				//	Preparazione alla connessione
 				if ((clock_gettime(CLOCK_REALTIME, &abstime)) == -1){
 					errno = -1;
 					perror("ERROR: -f");
-					return -1;
 				}
 				abstime.tv_sec += 2;
 				fprintf(stdout, "APERTURA CONNESSIONE A: %s \n", optarg);
 				if ((openConnection(optarg, 1000, abstime)) == -1){
 					errno = ECONNREFUSED;
 					perror("openConnection");
-					return -1;
 				}
 				SOCKET = alloca(strlen(optarg)+1);
 				strncpy(SOCKET, optarg, strlen(optarg)+1);
@@ -70,10 +69,21 @@ int parsing (int n, char** valori){
 					if ((openFile(optarg,3)) == -1){
 					errno = ECONNREFUSED;
 					perror("openFile");
-					return -1;
 				}
 			break;
 			case 'W':
+				token = strtok(optarg,",");
+
+				while(token != NULL)
+				{
+					file = alloca(strlen(token));
+					strncpy(file, token, strlen(token));
+					if(writeFile(file, NULL) != 0)
+					{
+						perror("ERROR: append to file");
+					}
+					token = strtok(NULL, ",");
+				}
 			break;
 			case 'D':
 
@@ -83,7 +93,6 @@ int parsing (int n, char** valori){
 				if (r == -1){
 					errno = ECONNREFUSED;
 					perror("readFile");
-					return -1;
 				}
 			break;
 			case 'R':
@@ -94,7 +103,6 @@ int parsing (int n, char** valori){
 				if (r == -1){
 					errno = ECONNREFUSED;
 					perror("lockFile");
-					return -1;
 				}
 			break;
 			case 't':
@@ -109,15 +117,13 @@ int parsing (int n, char** valori){
 				if (r == -1){
 					errno = ECONNREFUSED;
 					perror("unlockFile");
-					return -1;
 				}
 			break;
 			case 'c':
-				r = closeFile(optarg);
+				r = removeFile(optarg);
 				if (r == -1){
 					errno = ECONNREFUSED;
-					perror("unlockFile");
-					return -1;
+					perror("removeFile");
 				}
 			break;
 			case 'p':
@@ -126,12 +132,10 @@ int parsing (int n, char** valori){
 			case ':': 
                	printf("Errore, lista dei comandi: \n");
 				listaHelp();
-				return -1;
 			break;
             case '?': 
                 printf("Errore, lista dei comandi: \n");
 				listaHelp();
-				return -1;
 			break;
 		}
 	return 0;
@@ -140,13 +144,11 @@ int parsing (int n, char** valori){
 
 int main(int argc, char* argv[])
 {
-	int tmp;
-	tmp = parsing(argc,argv);
-	if (tmp == 0)
-		if(closeConnection(SOCKET) != 0)
-    	{
-        	perror("ERROR: Unable to close connection correctly with server");
-        	exit(EXIT_FAILURE);
-    	}
+	parsing(argc,argv);
+	if(closeConnection(SOCKET) != 0)
+    {
+        perror("ERROR: Unable to close connection correctly with server");
+        exit(EXIT_FAILURE);
+    }
 	return 0;
 }

@@ -51,7 +51,7 @@ int closeConnection(const char* sockname){
 	errno = 0;
 
 	msg_t* sockClose = alloca(sizeof(msg_t));
-	sockClose->op = 7;
+	sockClose->op = 8;
 
 	//	invio il messaggio al server
 	if (writen(sockfd,sockClose,sizeof(msg_t)) <= 0){
@@ -159,7 +159,49 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	char *tmp_buf = alloca((*size));
 	strncpy(tmp_buf, tmp.str, tmp.lStr);
 	*buf = (void*)tmp_buf;
+	printf("Testo: %s\n", tmp.str);
 	return 0;
+}
+
+char* readBytes(const char* name, long* filelen)
+{
+	FILE *file = NULL;
+	if ((file = fopen(name, "rb")) == NULL){
+		perror("ERRORE: APERTURA FILE");
+		fclose(file);
+		return NULL;
+	}
+
+	if (fseek(file, 0, SEEK_END) == -1){
+		perror("ERRORE: FSEEK");
+		fclose(file);
+		return NULL;
+	}
+
+	long lun = ftell(file);
+	*filelen = lun;
+
+	char* ret;
+	ret = alloca(lun);
+
+	if (fseek(file, 0, SEEK_SET) != 0) {
+		perror("ERRORE: FSEEK");
+		fclose(file);
+		free(ret);
+		return NULL;
+	}
+
+	int err;
+
+	if ((err = fread(ret, 1, lun, file)) != lun){
+		perror("ERRORE: FREAD");
+		fclose(file);
+		free(ret);
+		return NULL;
+	}
+
+	fclose(file);
+	return ret;
 }
       
 /**
@@ -178,19 +220,18 @@ int writeFile(const char* pathname, const char* dirname)
 
 	write->nome[nameLen] = '\0';
 	write->lNome = nameLen;
-/*
+
 	long fileLen;
 	char* buf;
 
-	if ((buf = readFile(pathname, &fileLen)) == NULL){
+	if ((buf = readBytes(pathname, &fileLen)) == NULL){
 		errno = -1;
-		perror("ERROR: Lettura di readFile");
+		perror("ERRORE: Lettura di readFile");
 		return -1;
 	}
 
 	memcpy(write->str, buf, fileLen);
-*/
-	//pid
+	write->lStr = fileLen;
 	write->cLock = getpid();
 	
 	//	mando il messaggio al server
@@ -207,9 +248,9 @@ int writeFile(const char* pathname, const char* dirname)
 		perror("ERRORE: lettura risposta readFile");
 	}
 
-	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
+	if (tmp != OP_OK){printf("E' sbagliato\n");	return -1;}
 
-	printf("ok");
+	printf("ok\n");
 	return 0;
 }
 
@@ -256,9 +297,9 @@ int lockFile(const char* pathname)
 		perror("ERRORE: lettura risposta lockFile");
 	}
 
-	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
+	if (tmp != OP_OK){printf("E' sbagliato\n");	return -1;}
 
-	printf("ok");
+	printf("ok\n");
 	return 0;
 }
 
@@ -269,7 +310,7 @@ int lockFile(const char* pathname)
 int unlockFile(const char* pathname)
 {
 	msg_t* unlock = alloca(sizeof(msg_t));
-	unlock->op = 6; // da cambiare
+	unlock->op = 7;
 	errno = 0;
 
 	int nameLen = strlen(pathname) + 1;
@@ -295,9 +336,9 @@ int unlockFile(const char* pathname)
 		perror("ERRORE: lettura risposta lockFile");
 	}	
 
-	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
+	if (tmp != OP_OK){printf("E' sbagliato\n");	return -1;}
 
-	printf("ok");
+	printf("ok\n");
 	return 0;
 }
 
@@ -334,7 +375,8 @@ int closeFile(const char* pathname)
 		perror("ERRORE: lettura risposta lockFile");
 	}	
 
-	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
+	if (tmp != OP_OK){printf("E' sbagliato\n");	return -1;}
+	printf("ok\n");
 	return 0;
 }
 
@@ -369,6 +411,7 @@ int removeFile(const char* pathname)
 		perror("ERRORE: lettura risposta lockFile");
 	}	
 
-	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
+	if (tmp != OP_OK){printf("E' sbagliato\n");	return -1;}
+	printf("ok\n");
 	return 0;
 }

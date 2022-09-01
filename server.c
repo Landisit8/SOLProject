@@ -22,6 +22,7 @@ int fdmax;
 long memMax;
 long numMax;
 fd_set set;
+pthread_mutex_t setLock = PTHREAD_MUTEX_INITIALIZER;
 
 //	Pull di thread vuoto
 pthread_t *thr = NULL;
@@ -176,7 +177,7 @@ int operation(int fd_io, msg_t msg)
 	case READ_OP:
 	//	caso particolare per mandare anche il testo insieme alla risposta
 		printf("sto eseguendo la read\n");
-		tmp = readFile(&pRoot, msg.nome, &re);
+		tmp = readFile(&pRoot, msg.nome, &re, msg.cLock);
 		message(tmp, &re);
 		if (writen(fd_io, &re, sizeof(msg_t)) <= 0)
 		{
@@ -193,7 +194,7 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case APPEND_OP:
 		printf("sto eseguendo la append\n");
-		tmp = appendToFile(&pRoot, msg.nome, msg.str);
+		tmp = appendToFile(&pRoot, msg.nome, msg.str, msg.cLock);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		message(tmp, &msg);
@@ -201,20 +202,25 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case CLOSE_OP:
 		printf("sto eseguendo la close\n");
-		tmp = changeStatus(&pRoot, msg.nome, 1);
+		tmp = changeStatus(&pRoot, msg.nome, 1, msg.cLock);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case REMOVE_OP:
-		printf("sto eseguendo la lfuremove\n");
-		// tmp = fileRemove(&pRoot,msg.nome);
-		tmp = lfuRemove(&pRoot);
+		printf("sto eseguendo la remove\n");
+		tmp = fileRemove(&pRoot,msg.nome, msg.cLock);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case LOCK_OP:
 		printf("sto eseguendo la lock :)\n");
 		tmp = changeLock(&pRoot, msg.nome, 0, msg.cLock);
+		message(tmp, &msg);
+		operation(fd_io, msg);
+		break;
+	case UNLOCK_OP:
+		printf("sto eseguendo la lock :)\n");
+		tmp = changeLock(&pRoot, msg.nome, 1, msg.cLock);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
@@ -242,6 +248,7 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case OP_BLOCK:
+		printf("sto mandando che il file è bloccato\n");
 		if (writen(fd_io, &msg, sizeof(int)) <= 0)
 		{
 			errno = -1;
@@ -251,6 +258,7 @@ int operation(int fd_io, msg_t msg)
 
 		break;
 	case OP_FFL_SUCH:
+		printf("file richiesto non e' disponibile\n");
 		if (writen(fd_io, &msg, sizeof(int)) <= 0)
 		{
 			errno = -1;
@@ -259,6 +267,7 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case OP_MSG_SIZE:
+		printf("Messaggio troppo lungo\n");
 		if (writen(fd_io, &msg, sizeof(int)) <= 0)
 		{
 			errno = -1;
@@ -267,6 +276,7 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case OP_END:
+		printf("Sto Chiudendo la connessione\n");
 		fflush(stderr);
 		if (writen(fd_io, &msg.op, sizeof(ops)) <= 0)
 		{
@@ -300,10 +310,12 @@ void *readValue(void *arg)
 
 		operation(msg->fd_c, *msg);
 		//ATTENZIONE DA CONTROLARE IL NO SENSE
-		fprintf(stderr, "\nop: %d\n", msg->op);
-		if (msg->op != 7)
+		if (msg->op != 8)
 		{
-			FD_SET(msg->fd_c, &set);
+			fprintf(stderr, "reinserisco client\n");
+            LOCK(&setLock); //faccio lock sul set prima di reinserire la richiesta
+            FD_SET(msg->fd_c, &set);
+            UNLOCK(&setLock);
 		}
 	}
 	fflush(stderr);
@@ -389,12 +401,16 @@ int main(int argc, char *argv[])
 	//	il massimo dei descrittori
 	fdmax = fd;
 
+	struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 1;
+
 	// loop infinito
 	for (;;)
 	{
 		// preparo la maschera per la select
 		tmpset = set;
-		if (select(fdmax + 1, &tmpset, NULL, NULL, NULL) == -1)
+		if (select(fdmax + 1, &tmpset, NULL, NULL, &timeout) == -1)
 		{
 			// attenzione al +1
 			perror("select");
@@ -428,7 +444,7 @@ int main(int argc, char *argv[])
 				}
 
 				//	tolgo il client dal set per evitare messaggi doppi
-				FD_CLR(fd_c, &tmpset);
+				FD_CLR(fd_c, &set);
 
 				rqs->fd_c = fd_c;
 

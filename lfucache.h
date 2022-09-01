@@ -73,7 +73,7 @@ int lfuRemove(nodo* n);
  * \si scambia con la foglia e cancello la foglia 
  * \return n ok  NULL non esiste l'albero   
 */
-int fileRemove(nodo* root, char* nome);
+int fileRemove(nodo* root, char* nome, pid_t cLock);
 
 /** 
  * \se viene fatta una operazione di richiesta del cient, aumento la frequenza  
@@ -85,7 +85,7 @@ int addFreqquenza(int fre);
  * \cambia lo stato del nodo
  * \return il valore cambiato dello stato //lb operazione
 */
-int changeStatus(nodo* root, char* name, int lb);
+int changeStatus(nodo* root, char* name, int lb, pid_t cLock);
 
 /** 
  * \cambia lo stato del lucchetto
@@ -108,13 +108,13 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock);
  * \
  * \ 
 */
-int readFile(nodo* root, char* name, msg_t* text);
+int readFile(nodo* root, char* name, msg_t* text, pid_t cLock);
 
 /** 
  * \
  * \ 
 */
-int appendToFile(nodo* root, char* name, char* text);
+int appendToFile(nodo* root, char* name, char* text, pid_t cLock);
 
 /** 
  * \
