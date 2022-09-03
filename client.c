@@ -42,6 +42,8 @@ int parsing (int n, char** valori){
 	int r;
 	char* token;
 	char* file;
+	char *tmp = NULL;
+	long num = 0;
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1)
 		switch(opt) 
@@ -96,7 +98,20 @@ int parsing (int n, char** valori){
 				}
 			break;
 			case 'R':
+				//	preso da internet, https://stackoverflow.com/questions/1052746/getopt-does-not-parse-optional-arguments-to-parameters
+				tmp = optarg;
+				//	controllo se c'è l'argomento opzionale
+				if (!optarg && NULL != valori[optind] && '-' != valori[optind][0]){
+					tmp = valori[optind++];
+				}
+				//	se tmp esiste:
+				if (tmp) isNumber(tmp, &num);
 
+				r = 0;
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("readNFiles");
+				}
 			break;
 			case 'd':
 			r = lockFile(optarg);

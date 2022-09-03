@@ -16,6 +16,7 @@ typedef enum
 	LOCK_OP		=	6,	//	SETTO LA LOCK.
 	UNLOCK_OP	=	7,	//	SETTO LA UNLOCK.
 	END_OP		=	8,	//	CHIUSURA COMMUNICAZIONE
+	READS_OP	=	9,	//	RICHIESTA DI LEGGERE I DATI IN PIU' FILE
 
 	/*
 	* \aggiungere qui eltre operazioni che si vogliono implementare

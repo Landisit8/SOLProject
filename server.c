@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <sys/select.h>
 #include <pthread.h>
+#include <signal.h>
 
 #include <utils.h>
 #include <conn.h>
@@ -21,6 +22,7 @@ char *sktname = NULL;
 int fdmax;
 long memMax;
 long numMax;
+long thrw;
 fd_set set;
 pthread_mutex_t setLock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -31,6 +33,15 @@ msg_l *attesa;
 
 pthread_mutex_t richiesta = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t wait_attesa = PTHREAD_COND_INITIALIZER;
+
+//	gestione dei segnali
+volatile sig_atomic_t sig_interruzione = 0;
+volatile sig_atomic_t sig_chiusura = 0;
+volatile sig_atomic_t interrompi_segnali = 0;
+
+pthread_t signal_handler;
+
+sigset_t signal_mask;
 
 nodo pRoot = {0, "pRoot", "abcd", 1, 1, 0, NULL, NULL,};
 
@@ -186,6 +197,12 @@ int operation(int fd_io, msg_t msg)
 			return -1;
 		}
 		break;
+	case READS_OP:
+		printf("sto eseguendo la reads\n");
+		//tmp = readsFile();
+		//message(tmp, &msg);
+		//operation(fd_io,msg);
+		break;
 	case WRITE_OP:
 		printf("sto eseguendo la write\n");
 		tmp = writeFile(&pRoot, msg.nome, msg.str, msg.cLock);
@@ -298,28 +315,99 @@ int operation(int fd_io, msg_t msg)
 void *readValue(void *arg)
 {
 	fprintf(stderr, "Dentro readValue\n");
-	for (;;)
+
+	//è stato ricevuto un SIGINT o un SIGQUIT
+	while (!sig_interruzione)
 	{
+
+		//SIGHUP ricevuto e ho terminato di servire tutte le richieste rimanenti
+		if (sig_chiusura && attesa->testa == NULL){
+			fprintf(stderr, "SIGHUP: terminato\n");
+			break;
+		}
+
 		msg_t *msg = alloca(sizeof(msg_t));
 
-		pthread_mutex_lock(&richiesta);
-		pthread_cond_wait(&wait_attesa, &richiesta);
-		msgPopReturn(attesa, &msg);
+		LOCK(&richiesta);
+		WAIT(&wait_attesa, &richiesta);
 
-		pthread_mutex_unlock(&richiesta);
+		//	sse non sono stati mandati segnali di interruzione forzata controllo se ci sono richieste da servire
+		if (!sig_interruzione && attesa->testa != NULL){
+			msgPopReturn(attesa, &msg);
 
-		operation(msg->fd_c, *msg);
-		//ATTENZIONE DA CONTROLARE IL NO SENSE
+			UNLOCK(&richiesta);
+
+			operation(msg->fd_c, *msg);
+
+			//ATTENZIONE DA CONTROLARE IL NO SENSE
 		if (msg->op != 8)
-		{
-			fprintf(stderr, "reinserisco client\n");
-            LOCK(&setLock); //faccio lock sul set prima di reinserire la richiesta
-            FD_SET(msg->fd_c, &set);
-            UNLOCK(&setLock);
+			{
+				fprintf(stderr, "reinserisco client\n");
+				LOCK(&setLock); //faccio lock sul set prima di reinserire la richiesta
+				FD_SET(msg->fd_c, &set);
+				UNLOCK(&setLock);
+			}
 		}
+		else	UNLOCK(&richiesta);	
+		free(msg);
 	}
 	fflush(stderr);
-	return NULL;
+	pthread_exit(NULL);
+}
+
+void* signalhandler(void*arg)
+{
+	fprintf(stderr,"\nSignal handler activared\n");
+	//variabile per ricevere il segnale
+	int segnale = -1;
+
+	//quando ricevo un segnale il thread si ferma
+	while (!interrompi_segnali)
+	{
+		//aspetto il segnale
+		sigwait(&signal_mask, &segnale);
+
+		//segnale ricevuto
+		interrompi_segnali = 1;
+
+		//ricevo un segnale per fermare immediatamente il server
+		if (segnale == SIGINT || segnale == SIGQUIT){
+			fprintf(stderr, "SIGINT o SIGQUIT\n");
+			//	segnalo ai worker
+			sig_interruzione = 1;
+			//sblocco la list
+			pthread_cond_broadcast(&wait_attesa);
+
+			//chiudo tutti i client connessi e annullo le le richieste
+			msg_t* msg = attesa->testa;
+			msg_t* msg_n;
+
+			while (msg != NULL){
+				close(msg->fd_c);
+				msg_n = msg->next;
+				free(msg);
+				msg = msg_n;
+			}
+
+			//chiudo tutti i thread
+			for (int i=0;i<thrw;i++)
+				pthread_join(thr[i], NULL);
+		}
+
+		//chiudo il server dopo aver sentito tutte le richieste
+		if (segnale == SIGHUP){
+			fprintf(stderr, "SIGHUP\n");
+			//segnalo ai worker
+			sig_chiusura =1;
+			//sblocco la lista
+			pthread_cond_broadcast(&wait_attesa);
+			//aspetto i thread
+			for(int i=0;i<thrw;i++)
+				pthread_join(thr[i], NULL);
+		}
+	}
+	fprintf(stderr, "Uscita signal");
+	pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[])
@@ -329,6 +417,7 @@ int main(int argc, char *argv[])
 	addTree(&pRoot, 5, "amelia", "hola", 0, 1);
 	addTree(&pRoot, 7, "fede", "bello", 0, 0);
 
+	fprintf(stderr, "%d", getpid());
 	//	controllo se file config non esiste
 	if ((sktname = malloc(MAXS * sizeof(char))) == NULL)
 	{
@@ -344,6 +433,26 @@ int main(int argc, char *argv[])
 
 	cleanup();
 	atexit(cleanup);
+	/*
+	*********************************************
+	Creazione del socket e generazione del pool di thread
+	*********************************************
+	*/
+	int r = 0;
+
+	sigset_t oldmask;
+
+	SYSCALL_EXIT("sigemptyset", r, sigemptyset(&signal_mask), "ERRORE: sigemptyset", "");
+	SYSCALL_EXIT("sigaddset", r, sigaddset(&signal_mask, SIGHUP), "ERRORE: sigaddset", "");
+	SYSCALL_EXIT("sigaddset", r, sigaddset(&signal_mask, SIGINT), "ERRORE: sigaddset", "");
+	SYSCALL_EXIT("sigaddset", r, sigaddset(&signal_mask, SIGQUIT), "ERRORE: sigaddset", "");
+	
+	//applico la maschera
+	SYSCALL_EXIT("pthread_sigmask", r, pthread_sigmask(SIG_SETMASK, &signal_mask, &oldmask), "ERRORE: pthread_sigmask", "");
+
+	//attivo il thread per la gestione dei segnali
+    SYSCALL_EXIT("pthread_create", r, pthread_create(&signal_handler, NULL, &signalhandler, NULL), "ERROR: pthread_create", "");  
+
 	/*
 	*********************************************
 	Creazione del socket e generazione del pool di thread
@@ -406,7 +515,7 @@ int main(int argc, char *argv[])
     timeout.tv_usec = 1;
 
 	// loop infinito
-	for (;;)
+	while(!sig_chiusura && !sig_interruzione)
 	{
 		// preparo la maschera per la select
 		tmpset = set;
@@ -439,7 +548,7 @@ int main(int argc, char *argv[])
 
 				if (readn(fd_c, rqs, sizeof(msg_t)) <= 0)
 				{
-					perror("ERROR: lettura del messaggio");
+					perror("ERRORE: lettura del messaggio");
 					return -1;
 				}
 

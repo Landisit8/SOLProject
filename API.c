@@ -1,14 +1,5 @@
 #define _XOPEN_SOURCE   600
 #define _POSIX_C_SOURCE 200112L
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <getopt.h>
-#include <time.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <errno.h>
 
 #include <utils.h>
 #include <ops.h>
@@ -118,6 +109,64 @@ int openFile(const char* pathname, int flags)
 	return 0;
 }
 
+char* readBytes(const char* name, long* filelen)
+{
+	FILE *file = NULL;
+	if ((file = fopen(name, "rb")) == NULL){
+		perror("ERRORE: APERTURA FILE");
+		fclose(file);
+		return NULL;
+	}
+
+	if (fseek(file, 0, SEEK_END) == -1){
+		perror("ERRORE: FSEEK");
+		fclose(file);
+		return NULL;
+	}
+
+	long lun = ftell(file);
+	*filelen = lun;
+
+	char* ret;
+	ret = alloca(lun);
+
+	if (fseek(file, 0, SEEK_SET) != 0) {
+		perror("ERRORE: FSEEK");
+		fclose(file);
+		free(ret);
+		return NULL;
+	}
+
+	int err;
+
+	if ((err = fread(ret, 1, lun, file)) != lun){
+		perror("ERRORE: FREAD");
+		fclose(file);
+		free(ret);
+		return NULL;
+	}
+
+	fclose(file);
+	return ret;
+}
+
+int writeBytes(const char* name, char* text, long size, const char* dirname){
+	FILE *file;
+	char* path = alloca(strlen(dirname) + strlen(name) + 1);
+
+	sprintf(path, "%s/%s", dirname, name);
+	path[strlen (dirname) + strlen(name) + 1] = '\0';
+	errno = 0;
+	if ((file = fopen(path, "wb")) == NULL){
+		fprintf(stderr, "errno:%d\n", errno);
+		return -1;
+	}
+
+	if ((fwrite(text, sizeof(char), size, file)) != size)	return -1;
+
+	fclose(file);
+	return 0;
+}
 
 /**
  *	\Legge tutto il contenuto del file dal server, ritornando un puntatore.
@@ -163,46 +212,43 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	return 0;
 }
 
-char* readBytes(const char* name, long* filelen)
-{
-	FILE *file = NULL;
-	if ((file = fopen(name, "rb")) == NULL){
-		perror("ERRORE: APERTURA FILE");
-		fclose(file);
-		return NULL;
+int readNFiles(int N, const char* dirname){
+	msg_t* reads = alloca(sizeof(msg_t));
+	reads->op = 9;
+	reads->flags = N;
+	int tmpo = 0;
+
+	errno = 0;
+
+	reads->cLock = getpid();
+
+	//	mando il messaggio al server
+	if (writen(sockfd, reads, sizeof(msg_t)) <= 0){
+		errno = -1;
+		perror("ERRORE: scrittura readFile");
+		return -1;
 	}
+	msg_t tmp;
+	do{
+		//	ricevo il messaggio dal server
+		if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
+		errno = -1;
+		perror("ERRORE: lettura risposta readFile");
+		}
+		if (tmp.flags == 0)	return -1;
+		if (tmpo == 0){
+			N = tmp.flags;
+			tmpo = 1;
+		}
 
-	if (fseek(file, 0, SEEK_END) == -1){
-		perror("ERRORE: FSEEK");
-		fclose(file);
-		return NULL;
-	}
+		writeBytes(tmp.nome,tmp.str,tmp.lStr,dirname);
+		N--;
+	}while(N<0);
 
-	long lun = ftell(file);
-	*filelen = lun;
-
-	char* ret;
-	ret = alloca(lun);
-
-	if (fseek(file, 0, SEEK_SET) != 0) {
-		perror("ERRORE: FSEEK");
-		fclose(file);
-		free(ret);
-		return NULL;
-	}
-
-	int err;
-
-	if ((err = fread(ret, 1, lun, file)) != lun){
-		perror("ERRORE: FREAD");
-		fclose(file);
-		free(ret);
-		return NULL;
-	}
-
-	fclose(file);
-	return ret;
+	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
+	return tmp.flags;
 }
+
       
 /**
  *	\
@@ -261,6 +307,7 @@ int writeFile(const char* pathname, const char* dirname)
 */
 int appendToFile(const char* pathname, void* buf, size_t size, const char* dirname)
 {
+	
 	return 0;
 }
 
