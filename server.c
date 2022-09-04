@@ -291,6 +291,7 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case OP_OK:
 		printf("Sto mandando ok\n");
+		//	da cambiare il ritorno del messaggio, da op a msg x tutti
 		if (writen(fd_io, &msg.op, sizeof(ops)) <= 0)
 		{
 			errno = -1;
