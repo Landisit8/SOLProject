@@ -169,6 +169,9 @@ void message(int back, msg_t *msg)
 	case -4:
 		msg->op = OP_END;
 		break;
+	case -5:
+		msg->op = OP_LFU;
+		break;
 	}
 }
 
@@ -176,7 +179,9 @@ int operation(int fd_io, msg_t msg)
 {
 	printf("sono dentro operation\n");
 	int tmp;
-	msg_t re;
+	msg_t re;	//ATTENZIONE
+	msg_t* res;
+	msg_l* buffer = NULL;
 	switch (msg.op)
 	{
 	case OPEN_OP:
@@ -199,9 +204,31 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case READS_OP:
 		printf("sto eseguendo la reads\n");
-		//tmp = readsFile();
-		//message(tmp, &msg);
-		//operation(fd_io,msg);
+		if (msg.flags == 0)	msg.flags = -1;
+		buffer = alloca(sizeof(msg_l));
+		msg_lStart(buffer);
+		readsFile(&pRoot, msg.flags, msg.cLock, buffer);
+		if (buffer->lung == 0){
+			res->op = 0;
+			if (writen(fd_io, res, sizeof(msg_t)) <= 0)
+			{
+				errno = -1;
+				perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+			}		
+		}
+		while ((buffer->lung) > 0){
+			res = alloca(sizeof(msg_t));
+			msgPopReturn(buffer, &res);
+			res->flags = buffer->lung + 1;
+			if (writen(fd_io, res, sizeof(msg_t)) <= 0)
+			{
+				errno = -1;
+				perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+			}
+			free(res);
+		}
 		break;
 	case WRITE_OP:
 		printf("sto eseguendo la write\n");
@@ -245,6 +272,22 @@ int operation(int fd_io, msg_t msg)
 		printf("sto eseguendo la chiusura del server\n");
 		message(-4, &msg);
 		operation(fd_io, msg);
+		break;
+	case OP_LFU:
+		printf("Memoria piena, si cancella con meno frequenza");
+		tmp = lfuRemove(&pRoot, &re);
+		if (tmp != 0){
+			message(tmp,&msg);
+			operation(fd_io, msg);
+		}
+		else{
+			if (writen(fd_io, &re, sizeof(msg_t)) <= 0)
+			{
+				errno = -1;
+				perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+			}
+		}
 		break;
 	case OP_OK:
 		printf("Sto mandando ok\n");
@@ -415,7 +458,9 @@ int main(int argc, char *argv[])
 	long thrw;
 	addTree(&pRoot, 0, "ema", "gay", 0, 1);
 	addTree(&pRoot, 5, "amelia", "hola", 0, 1);
-	addTree(&pRoot, 7, "fede", "bello", 0, 0);
+	addTree(&pRoot, 7, "fede", "bello", 1, 1);
+	addTree(&pRoot, 7, "lori", "Ho fame", 0, 1);
+	addTree(&pRoot, 7, "leonardo", "Leggo", 0, 1);
 
 	fprintf(stderr, "%d", getpid());
 	//	controllo se file config non esiste

@@ -96,6 +96,8 @@ int parsing (int n, char** valori){
 					errno = ECONNREFUSED;
 					perror("readFile");
 				}
+				if (r == 0)	//da aggiungere il controllo se la cartella è NULL
+					writeBytes(optarg,buf,sz,"./read");
 			break;
 			case 'R':
 				//	preso da internet, https://stackoverflow.com/questions/1052746/getopt-does-not-parse-optional-arguments-to-parameters
@@ -107,7 +109,7 @@ int parsing (int n, char** valori){
 				//	se tmp esiste:
 				if (tmp) isNumber(tmp, &num);
 
-				r = 0;
+				r = readNFiles(num, "./read");
 				if (r == -1){
 					errno = ECONNREFUSED;
 					perror("readNFiles");
@@ -124,7 +126,7 @@ int parsing (int n, char** valori){
 
 			break;
 			case 'l':
-			
+				
 
 			break;
 			case 'u':

@@ -1,4 +1,4 @@
 numeroThread=5;
 memoriaMassima=2048;
-numerofile=100;
+numerofile=5;
 socket=./canale;

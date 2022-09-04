@@ -48,7 +48,19 @@ int readFile(const char* pathname, void** buf, size_t* size);
       nel caso di meno di N file disponibli di inviati tutti (anche nel caso che non venga specificato)
  *	\ ritorna valore uguale o maggiore di 0 in caso di successo, -1 in caso di fallimento
 */
+int readNFiles(int N, const char* dirname);
+
+/**
+ *	\
+     \
+*/
 char* readBytes(const char* name, long* filelen);
+
+/**
+ *	\
+     \
+*/
+int writeBytes(const char* name, char* text, long size, const char* dirname);
 
 /**
  *	\ Scrive tutti il file da un "pathname" nel file server.

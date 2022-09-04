@@ -1,6 +1,7 @@
 #define _XOPEN_SOURCE   600
 #define _POSIX_C_SOURCE 200112L
 
+#include <API.h>
 #include <utils.h>
 #include <ops.h>
 #include <conn.h>
@@ -96,16 +97,16 @@ int openFile(const char* pathname, int flags)
 	}
 
 	//	ricevo il messaggio dal server
-	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops)) <=0) {
+	msg_t tmp;
+	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
-		perror("ERRORE: lettura risposta openFile");
-		return -1;
+		perror("ERRORE: lettura risposta readFile");
 	}
 
-	if (tmp != OP_OK){printf("E' sbagliato");	return -1;}
-
-	printf("ok");
+	if (tmp.op == OP_LFU)
+		writeBytes(tmp.nome,tmp.str,tmp.lStr,"./LFU");
+	if (tmp.op != OP_OK)
+		return -1;
 	return 0;
 }
 
@@ -150,7 +151,8 @@ char* readBytes(const char* name, long* filelen)
 	return ret;
 }
 
-int writeBytes(const char* name, char* text, long size, const char* dirname){
+int writeBytes(const char* name, char* text, long size, const char* dirname)
+{
 	FILE *file;
 	char* path = alloca(strlen(dirname) + strlen(name) + 1);
 
@@ -208,7 +210,6 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	char *tmp_buf = alloca((*size));
 	strncpy(tmp_buf, tmp.str, tmp.lStr);
 	*buf = (void*)tmp_buf;
-	printf("Testo: %s\n", tmp.str);
 	return 0;
 }
 
@@ -217,6 +218,7 @@ int readNFiles(int N, const char* dirname){
 	reads->op = 9;
 	reads->flags = N;
 	int tmpo = 0;
+	int ret = 0;
 
 	errno = 0;
 
@@ -238,15 +240,14 @@ int readNFiles(int N, const char* dirname){
 		if (tmp.flags == 0)	return -1;
 		if (tmpo == 0){
 			N = tmp.flags;
+			ret = tmp.flags;
 			tmpo = 1;
 		}
-
 		writeBytes(tmp.nome,tmp.str,tmp.lStr,dirname);
 		N--;
-	}while(N<0);
+	}while(N>0);
 
-	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
-	return tmp.flags;
+	return ret;
 }
 
       

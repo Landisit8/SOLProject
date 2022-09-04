@@ -36,4 +36,4 @@ clean		:
 	rm -f $(TARGETS)
 
 cleanall	: clean
-	\rm -f *.o *~ *.a *.out ./bob ./bau ./canale 
+	\rm -f *.o *~ *.a *.out ./bob ./bau ./canale

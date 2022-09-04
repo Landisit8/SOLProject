@@ -168,7 +168,7 @@ nodo* searchLeaf (nodo* n)
 //	cerca il valore minimo nell'albero, un'altra ricerca per trovare il nome del nodo
 //	cosi restituisce il nodo effettevivo, infine si cerca una foglia qualsisi e con le considerazioni della funzione searchLeaf
 //	si scambia con il nodo con la frequenza minima trovata con la foglia e si cancella la foglia 
-int lfuRemove(nodo* n)
+int lfuRemove(nodo* n, msg_t* text)
 {
 	if (n == NULL)	return -3;
 	if (n->left == NULL && n->right == NULL)	return -1;
@@ -189,6 +189,12 @@ int lfuRemove(nodo* n)
 	// cerco il nodo dal nome del nodo minimo e ottengo un riferimento
 	if (!(find = findTreeFromName(n,name)))	return -3;
 	printf("convertito in nodo, nome: %s\n", find->nome);
+
+	//carico gli elementi in "text" per caricarlo nella cartella apposita
+	strncpy(text->str,find->testo, strlen(find->testo));
+	text->lStr = strlen(find->testo);
+	strncpy(text->nome,find->nome, strlen(find->nome));
+	text->lNome = strlen(find->nome);
 
 	//	cerco una foglia generica
 	if (!(leaf = searchLeaf(n)))	return -3;
@@ -224,7 +230,7 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock)
 {
 	printf("Sono dentro openFile\n");
 	printf("flags: %d \n", flags);
-	if (numMax == 0)	lfuRemove(root);
+	if (numMax == 0)	return -5;
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	switch(flags){
 		case 0:
@@ -268,6 +274,38 @@ int readFile(nodo* root, char* name, msg_t* text, pid_t cLock)
 	return 0;
 }
 
+
+//	leggo n file dall'albero
+void readsFile(nodo* root, int n, pid_t cLock, msg_l* buffer)
+{
+	if (root == NULL)	return;
+	msg_t* tmp = alloca(sizeof(msg_t));
+	if(strcmp((root->nome), "pRoot")){
+	if (root->stato != 1){
+	if ((root->lucchetto != 1 && root->sLock != cLock) || root->lucchetto != 0){
+		if (n >= 0){
+			strncpy(tmp->str, root->testo, strlen(root->testo));
+			tmp->lStr = strlen(root->testo);
+			strncpy(tmp->nome, root->nome, strlen(root->nome));
+			tmp->lNome = strlen(root->nome);
+			msgHead(tmp, buffer);
+			n--;
+		} else if (n == -1){
+			strncpy(tmp->str, root->testo, strlen(root->testo));
+			tmp->lStr = strlen(root->testo);
+			strncpy(tmp->nome, root->nome, strlen(root->nome));
+			tmp->lNome = strlen(root->nome);
+			msgHead(tmp, buffer);
+		}
+	}
+	}
+	}
+	readsFile(root->left, n, cLock, buffer);
+	readsFile(root->right, n, cLock, buffer);
+
+	return;
+}
+
 int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 {
 	printf("sto eseguendo la append\n");
@@ -280,13 +318,13 @@ int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 		CHECK_EQ_EXIT(find->testo = realloc(find->testo, somma+1), NULL, ERROR: malloc);
 		strncat(find->testo, text, somma);
 		memMax = memMax - strlen(find->testo);
-		if (memMax <= 0)	{printf("sto cancellando....\n"); lfuRemove(find);}
+		if (memMax <= 0)	{printf("sto cancellando....\n"); return -5;}
 		addFrequenza(find->freq);
 	} 
 	return 0;
 }
 
-int writeFile(nodo* root, char* name, char* text, pid_t cLock) 
+int writeFile(nodo* root, char* name, char* text, pid_t cLock)
 {
 	nodo* find = NULL;
 	if ((find = findTreeFromName(root,name)) == NULL) {	
