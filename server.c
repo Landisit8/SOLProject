@@ -67,8 +67,8 @@ int updatemax(fd_set set, int fdmax)
 	return -1;
 }
 
-//	attraverso il file config che contiene i 4 parametri, estrabolo le informaizoni
-//	e le carico in 4 variabili.
+//	attraverso il file config che contiene i 5 parametri, estrabolo le informaizoni
+//	e le carico in 5 variabili.
 int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileLogName)
 {
 	//	descrittori
@@ -137,8 +137,9 @@ int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileL
 			if (c < 3)
 				fprintf(stderr, "non hai inserito un numero \n");
 			else {
-				strncpy(*sktname, string, MAXS);
-				strncpy(*fileLogName, string, MAXS);
+				c++;
+				if (c == 4)	strncpy(*sktname, string, MAXS);
+				else if (c == 5) strncpy(*fileLogName, string, MAXS);
 			}
 			break;
 		case 2:
@@ -155,13 +156,13 @@ int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileL
 }
 
 void fileLogCreate(){
-	char path = alloca(7 + strlen(fileLogName));
-	sprintf(path, "/%s.txt", fileLogName);
+	char* path = alloca(7 + strlen(fileLogName));
+	sprintf(path, "./%s.txt", fileLogName);
 
 	log_file = fopen(path, "w");
 
 	if (log_file != NULL){
-		fprint(log_file,"LOG FILE\n");
+		fprintf(log_file,"LOG FILE\n");
 		fflush(log_file);
 	}
 
@@ -210,7 +211,10 @@ int operation(int fd_io, msg_t msg)
 	switch (msg.op)
 	{
 	case OPEN_OP:
-		printf("sto eseguendo la open\n");
+		LOCK(&log_lock);
+		fprintf(log_file, "Open del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
 		LOCK(&setTree);
 		tmp = openFile(&pRoot, msg.nome, msg.flags, msg.cLock);
 		UNLOCK(&setTree);
@@ -276,8 +280,6 @@ int operation(int fd_io, msg_t msg)
 		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
-		message(tmp, &msg);
-		operation(fd_io, msg);
 		break;
 	case CLOSE_OP:
 		printf("sto eseguendo la close\n");
@@ -317,13 +319,16 @@ int operation(int fd_io, msg_t msg)
 		operation(fd_io, msg);
 		break;
 	case OP_LFU:
-		printf("Memoria piena, si cancella con meno frequenza");
+		printf("Memoria piena, si cancella con meno frequenza\n");
 		LOCK(&setTree);
 		tmp = lfuRemove(&pRoot, &re);
 		UNLOCK(&setTree);
 		LOCK(&setCont);
 		cont++;
 		UNLOCK(&setCont);
+		LOCK(&setNumMax);
+		numMax++;
+		UNLOCK(&setNumMax);
 		re.op = OP_LFU;
 		if (tmp != 0){
 			message(tmp,&msg);
@@ -387,6 +392,8 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case OP_END:
 		printf("Sto Chiudendo la connessione\n");
+		fprintf(log_file, "Chiusurà al client %d\n", fd_io);	// LogFile
+		fflush(log_file);
 		fflush(stderr);
 		if (writen(fd_io, &msg.op, sizeof(ops)) <= 0)
 		{
@@ -505,11 +512,12 @@ void* signalhandler(void*arg)
 int main(int argc, char *argv[])
 {
 	long thrw;
+	/*
 	addTree(&pRoot, 0, "ema", "gay", 0, 1);
 	addTree(&pRoot, 5, "amelia", "hola", 0, 1);
 	addTree(&pRoot, 7, "fede", "bello", 1, 1);
 	addTree(&pRoot, 6, "lori", "Ho fame", 0, 1);
-	addTree(&pRoot, 4, "leonardo", "Leggo", 0, 1);
+	addTree(&pRoot, 4, "leonardo", "Leggo", 0, 1);*/
 
 	fprintf(stderr, "%d", getpid());
 	//	controllo se file config non esiste
@@ -531,6 +539,7 @@ int main(int argc, char *argv[])
 	atexit(cleanup);
 	
 	fileLogCreate();
+
 	/*
 	*********************************************
 	Creazione del socket e generazione del pool di thread
@@ -635,6 +644,8 @@ int main(int argc, char *argv[])
 					//...accetto la connessione
 					SYSCALL_EXIT("accept", fd_c, accept(fd, (struct sockaddr *)NULL, NULL), "accept", "");
 					FD_SET(fd_c, &set); // aggiungo il descrittore al master set
+					fprintf(log_file, "Connessione al client %d\n", fd_c);	// LogFile
+					fflush(log_file);
 					if (fd_c > fdmax)
 						fdmax = fd_c; // ricalcolo il massimo
 					printf("Nuovo max: %d\n", fdmax);

@@ -115,6 +115,7 @@ int openFile(const char* pathname, int flags)
 char* readBytes(const char* name, long* filelen)
 {
 	FILE *file = NULL;
+	fprintf(stderr, "nome: %s\n", name);
 	if ((file = fopen(name, "rb")) == NULL){
 		perror("ERRORE: APERTURA FILE");
 		fclose(file);
@@ -156,6 +157,7 @@ char* readBytes(const char* name, long* filelen)
 int writeBytes(const char* name, char* text, long size, const char* dirname)
 {
 	FILE *file;
+	errno = 0;
 	char* path = alloca(strlen(dirname) + strlen(name) + 1);
 
 	sprintf(path, "%s/%s", dirname, name);
@@ -296,11 +298,18 @@ int writeFile(const char* pathname, const char* dirname)
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
-
-	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
-
-	printf("ok\n");
+	printf("valore di op: %d\n", tmp.op);
+	if (tmp.op == OP_OK)
 	return 0;
+	
+	if (tmp.op == OP_LFU){
+		char *nome = strrchr(tmp.nome, '/');
+		nome++; 
+		writeBytes(nome,tmp.str,tmp.lStr,"./LFU");
+		writeFile(pathname,dirname);
+	}
+
+	return -1;
 }
 
 

@@ -317,7 +317,7 @@ void readsFile(nodo* root, int n, pid_t cLock, msg_l* buffer)
 
 int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 {
-	printf("sto eseguendo la append\n");
+	printf("sono dentro la append\n");
 	nodo* find = NULL;
 	if ((find = findTreeFromName(root,name)) == NULL)	return -3;
 	else if (find->stato != 0 || (find->lucchetto == 0 && find->sLock != cLock))	return -2;
@@ -338,9 +338,12 @@ int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 int writeFile(nodo* root, char* name, char* text, pid_t cLock)
 {
 	nodo* find = NULL;
+	int tmp;
 	if ((find = findTreeFromName(root,name)) == NULL) {	
-		openFile(root,name,0,cLock);	
-		return appendToFile(root,name,text,cLock); 
+		if ((tmp = openFile(root,name,0,cLock)) != 0)	
+			return tmp;
+		else
+			return appendToFile(root,name,text,cLock);
 		}
 	else	return -1;
 }

@@ -44,6 +44,7 @@ int parsing (int n, char** valori){
 	char* file;
 	char *tmp = NULL;
 	long num = 0;
+	char* nome;
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1)
 		switch(opt) 
@@ -78,11 +79,14 @@ int parsing (int n, char** valori){
 
 				while(token != NULL)
 				{
-					file = alloca(strlen(token));
-					strncpy(file, token, strlen(token));
-					if(writeFile(file, NULL) != 0)
+					file = alloca(strlen(token) + 1);
+					strncpy(file, token, strlen(token) + 1);
+					file[strlen(token) + 1] = '\0';
+					r = writeFile(file, NULL);
+					printf("valore di r: %d\n", r);
+					if(r == -1)
 					{
-						perror("ERROR: append to file");
+						perror("ERROR: write to file");
 					}
 					token = strtok(NULL, ",");
 				}
@@ -96,8 +100,11 @@ int parsing (int n, char** valori){
 					errno = ECONNREFUSED;
 					perror("readFile");
 				}
-				if (r == 0)	//da aggiungere il controllo se la cartella è NULL
-					writeBytes(optarg,buf,sz,"./read");
+				if (r == 0){	//da aggiungere il controllo se la cartella è NULL
+					nome = strrchr(optarg, '/');
+					nome++; 
+					writeBytes(nome,buf,sz,"./read");
+				}
 			break;
 			case 'R':
 				//	preso da internet, https://stackoverflow.com/questions/1052746/getopt-does-not-parse-optional-arguments-to-parameters
@@ -116,18 +123,17 @@ int parsing (int n, char** valori){
 				}
 			break;
 			case 'd':
-			r = lockFile(optarg);
-				if (r == -1){
-					errno = ECONNREFUSED;
-					perror("lockFile");
-				}
+			
 			break;
 			case 't':
 
 			break;
 			case 'l':
-				
-
+				r = lockFile(optarg);
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("lockFile");
+				}
 			break;
 			case 'u':
 				r = unlockFile(optarg);

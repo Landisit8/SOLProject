@@ -6,9 +6,7 @@ OPTFLAGS 	=
 T_LIBS		=	-pthread	
 
 TARGETS 	=	server		\
-			client			\
-			parsing			\
-			lfucache		
+			client		
 
 
 .PHONY: all clean cleanall
@@ -22,18 +20,30 @@ TARGETS 	=	server		\
 
 all		: $(TARGETS)
 
-bob		: server.o lfucache.o
-	$(CC) $(CFLAGS) $(INCLUDES) $(T_LIBS) $(OPTFLAGS) $^ -o $@
-server.o:	server.c lfucache.h
-lfucache.o: lfucache.c lfucache.h
+server: server.c libs/libtree.so libs/libapi.so
+	$(CC) $(CFLAGS) $(INCLUDES) $(T_LIBS) server.c -o server -Wl,-rpath,./libs -L ./libs -ltree -lapi
 
-bau		: client.o API.o
-	$(CC) $(CFLAGS) $(INCLUDES) $(OPTFLAGS) $^ -o $@
-client.o: client.c API.h
-API.o: API.c API.h
+client: client.c libs/libtree.so libs/libapi.so
+	$(CC) $(CFLAGS) $(INCLUDES) client.c -o client -Wl,-rpath,./libs -L ./libs -lapi
+
+
+libs/libtree.so: lfucache.o
+	$(CC) -shared -o libs/libtree.so $^
+lfucache.o:
+	$(CC) $(CFLAGS) $(INCLUDES) lfucache.c -c -fPIC -o $@
+
+libs/libapi.so: API.o
+	$(CC) -shared -o libs/libapi.so $^
+API.o:
+	$(CC) $(CFLAGS) $(INCLUDES) API.c -c -fPIC -o $@
 
 clean		: 
 	rm -f $(TARGETS)
 
 cleanall	: clean
-	\rm -f *.o *~ *.a *.out ./bob ./bau ./canale
+	\rm -f *.o *~ *.a *.out ./server ./client ./canale ./logFile.txt ./libs/*.* ./read/*.* ./LFU/*.*
+
+test1: all
+	./test/test1.sh
+test2: all
+	./test/test2.sh
