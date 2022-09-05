@@ -90,7 +90,7 @@ int changeStatus(nodo* root, char* name, int lb, pid_t cLock);
 /** 
  * \cambia lo stato del lucchetto
  * \return il valore cambiato dello stato //lb operazione
-*/
+*/ 
 int changeLock(nodo* root, char* name, int lb, pid_t cLock);
 
 /** 

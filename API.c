@@ -103,8 +103,10 @@ int openFile(const char* pathname, int flags)
 		perror("ERRORE: lettura risposta readFile");
 	}
 
-	if (tmp.op == OP_LFU)
+	if (tmp.op == OP_LFU){
 		writeBytes(tmp.nome,tmp.str,tmp.lStr,"./LFU");
+		openFile(pathname,flags);
+	}
 	if (tmp.op != OP_OK)
 		return -1;
 	return 0;
@@ -289,13 +291,13 @@ int writeFile(const char* pathname, const char* dirname)
 	}
 
 	//	ricevo il messaggio dal server
-	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops)) <= 0){
+	msg_t tmp;
+	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
 
-	if (tmp != OP_OK){printf("E' sbagliato\n");	return -1;}
+	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 
 	printf("ok\n");
 	return 0;
@@ -339,13 +341,13 @@ int lockFile(const char* pathname)
 	}
 
 	//	ricevo il messaggio dal server
-	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops)) <= 0){
+	msg_t tmp;
+	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}
 
-	if (tmp != OP_OK){printf("E' sbagliato\n");	return -1;}
+	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 
 	printf("ok\n");
 	return 0;
@@ -378,13 +380,13 @@ int unlockFile(const char* pathname)
 	}
 
 	//	ricevo il messaggio dal server
-	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops)) <= 0){
+	msg_t tmp;
+	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}	
 
-	if (tmp != OP_OK){printf("E' sbagliato\n");	return -1;}
+	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 
 	printf("ok\n");
 	return 0;
@@ -417,13 +419,13 @@ int closeFile(const char* pathname)
 	}
 
 	//	ricevo il messaggio dal server
-	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops)) <= 0){
+	msg_t tmp;
+	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}	
 
-	if (tmp != OP_OK){printf("E' sbagliato\n");	return -1;}
+	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 	printf("ok\n");
 	return 0;
 }
@@ -453,13 +455,13 @@ int removeFile(const char* pathname)
 	}
 
 	//	ricevo il messaggio dal server
-	ops tmp;
-	if (readn(sockfd, &tmp, sizeof(ops)) <= 0){
+	msg_t tmp;
+	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}	
 
-	if (tmp != OP_OK){printf("E' sbagliato\n");	return -1;}
+	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 	printf("ok\n");
 	return 0;
 }

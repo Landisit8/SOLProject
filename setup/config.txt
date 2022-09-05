@@ -2,3 +2,4 @@ numeroThread=5;
 memoriaMassima=2048;
 numerofile=0;
 socket=./canale;
+fileLogName = logFile; 

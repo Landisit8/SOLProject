@@ -16,15 +16,21 @@
 #include <lfucache.h>
 
 #define config "./setup/config.txt"
-
 char *sktname = NULL;
 
 int fdmax;
 long memMax;
+pthread_mutex_t setMemMax = PTHREAD_MUTEX_INITIALIZER;
 long numMax;
+pthread_mutex_t setNumMax = PTHREAD_MUTEX_INITIALIZER;
 long thrw;
 fd_set set;
 pthread_mutex_t setLock = PTHREAD_MUTEX_INITIALIZER;
+int cont = 0;
+pthread_mutex_t setCont = PTHREAD_MUTEX_INITIALIZER;
+FILE* log_file = NULL;
+pthread_mutex_t log_lock = PTHREAD_MUTEX_INITIALIZER;
+char* fileLogName;
 
 //	Pull di thread vuoto
 pthread_t *thr = NULL;
@@ -44,6 +50,7 @@ pthread_t signal_handler;
 sigset_t signal_mask;
 
 nodo pRoot = {0, "pRoot", "abcd", 1, 1, 0, NULL, NULL,};
+pthread_mutex_t setTree = PTHREAD_MUTEX_INITIALIZER;
 
 void cleanup()
 {
@@ -62,7 +69,7 @@ int updatemax(fd_set set, int fdmax)
 
 //	attraverso il file config che contiene i 4 parametri, estrabolo le informaizoni
 //	e le carico in 4 variabili.
-int parsing(long *thrw, long *memMax, char **sktname, long *numMax)
+int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileLogName)
 {
 	//	descrittori
 	FILE *fd = NULL;
@@ -129,8 +136,10 @@ int parsing(long *thrw, long *memMax, char **sktname, long *numMax)
 		case 1:
 			if (c < 3)
 				fprintf(stderr, "non hai inserito un numero \n");
-			else
+			else {
 				strncpy(*sktname, string, MAXS);
+				strncpy(*fileLogName, string, MAXS);
+			}
 			break;
 		case 2:
 			fprintf(stderr, "overflow/underflow \n");
@@ -143,6 +152,22 @@ int parsing(long *thrw, long *memMax, char **sktname, long *numMax)
 	}
 	*memMax = *memMax * 1048576; //	conversione da megabyte in byte
 	return 0;
+}
+
+void fileLogCreate(){
+	char path = alloca(7 + strlen(fileLogName));
+	sprintf(path, "/%s.txt", fileLogName);
+
+	log_file = fopen(path, "w");
+
+	if (log_file != NULL){
+		fprint(log_file,"LOG FILE\n");
+		fflush(log_file);
+	}
+
+	free(path);
+
+	return;
 }
 
 void message(int back, msg_t *msg)
@@ -186,14 +211,18 @@ int operation(int fd_io, msg_t msg)
 	{
 	case OPEN_OP:
 		printf("sto eseguendo la open\n");
+		LOCK(&setTree);
 		tmp = openFile(&pRoot, msg.nome, msg.flags, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case READ_OP:
 	//	caso particolare per mandare anche il testo insieme alla risposta
 		printf("sto eseguendo la read\n");
+		LOCK(&setTree);
 		tmp = readFile(&pRoot, msg.nome, &re, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &re);
 		if (writen(fd_io, &re, sizeof(msg_t)) <= 0)
 		{
@@ -207,7 +236,9 @@ int operation(int fd_io, msg_t msg)
 		if (msg.flags == 0)	msg.flags = -1;
 		buffer = alloca(sizeof(msg_l));
 		msg_lStart(buffer);
+		LOCK(&setTree);
 		readsFile(&pRoot, msg.flags, msg.cLock, buffer);
+		UNLOCK(&setTree);
 		if (buffer->lung == 0){
 			res->op = 0;
 			if (writen(fd_io, res, sizeof(msg_t)) <= 0)
@@ -232,13 +263,17 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case WRITE_OP:
 		printf("sto eseguendo la write\n");
+		LOCK(&setTree);
 		tmp = writeFile(&pRoot, msg.nome, msg.str, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case APPEND_OP:
 		printf("sto eseguendo la append\n");
+		LOCK(&setTree);
 		tmp = appendToFile(&pRoot, msg.nome, msg.str, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		message(tmp, &msg);
@@ -246,25 +281,33 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case CLOSE_OP:
 		printf("sto eseguendo la close\n");
+		LOCK(&setTree);
 		tmp = changeStatus(&pRoot, msg.nome, 1, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case REMOVE_OP:
 		printf("sto eseguendo la remove\n");
+		LOCK(&setTree);
 		tmp = fileRemove(&pRoot,msg.nome, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case LOCK_OP:
 		printf("sto eseguendo la lock :)\n");
+		LOCK(&setTree);
 		tmp = changeLock(&pRoot, msg.nome, 0, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case UNLOCK_OP:
-		printf("sto eseguendo la lock :)\n");
+		printf("sto eseguendo la unlock :)\n");
+		LOCK(&setTree);
 		tmp = changeLock(&pRoot, msg.nome, 1, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
@@ -275,7 +318,13 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case OP_LFU:
 		printf("Memoria piena, si cancella con meno frequenza");
+		LOCK(&setTree);
 		tmp = lfuRemove(&pRoot, &re);
+		UNLOCK(&setTree);
+		LOCK(&setCont);
+		cont++;
+		UNLOCK(&setCont);
+		re.op = OP_LFU;
 		if (tmp != 0){
 			message(tmp,&msg);
 			operation(fd_io, msg);
@@ -292,7 +341,7 @@ int operation(int fd_io, msg_t msg)
 	case OP_OK:
 		printf("Sto mandando ok\n");
 		//	da cambiare il ritorno del messaggio, da op a msg x tutti
-		if (writen(fd_io, &msg.op, sizeof(ops)) <= 0)
+		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -301,7 +350,7 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case OP_FOK:
 		printf("sto mandando no ok\n");
-		if (writen(fd_io, &msg, sizeof(int)) <= 0)
+		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE11: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -310,7 +359,7 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case OP_BLOCK:
 		printf("sto mandando che il file è bloccato\n");
-		if (writen(fd_io, &msg, sizeof(int)) <= 0)
+		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE12: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -320,7 +369,7 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case OP_FFL_SUCH:
 		printf("file richiesto non e' disponibile\n");
-		if (writen(fd_io, &msg, sizeof(int)) <= 0)
+		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE13: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -329,7 +378,7 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case OP_MSG_SIZE:
 		printf("Messaggio troppo lungo\n");
-		if (writen(fd_io, &msg, sizeof(int)) <= 0)
+		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE14: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -383,7 +432,6 @@ void *readValue(void *arg)
 
 			operation(msg->fd_c, *msg);
 
-			//ATTENZIONE DA CONTROLARE IL NO SENSE
 		if (msg->op != 8)
 			{
 				fprintf(stderr, "reinserisco client\n");
@@ -460,8 +508,8 @@ int main(int argc, char *argv[])
 	addTree(&pRoot, 0, "ema", "gay", 0, 1);
 	addTree(&pRoot, 5, "amelia", "hola", 0, 1);
 	addTree(&pRoot, 7, "fede", "bello", 1, 1);
-	addTree(&pRoot, 7, "lori", "Ho fame", 0, 1);
-	addTree(&pRoot, 7, "leonardo", "Leggo", 0, 1);
+	addTree(&pRoot, 6, "lori", "Ho fame", 0, 1);
+	addTree(&pRoot, 4, "leonardo", "Leggo", 0, 1);
 
 	fprintf(stderr, "%d", getpid());
 	//	controllo se file config non esiste
@@ -473,12 +521,16 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	parsing(&thrw, &memMax, &sktname, &numMax);
+	fileLogName = alloca(MAXS);
+
+	parsing(&thrw, &memMax, &sktname, &numMax, &fileLogName);
 
 	printf("nthread:%ld - memoria:%ld - socketname:%s - nfile massimi:%ld\n", thrw, memMax, sktname, numMax);
 
 	cleanup();
 	atexit(cleanup);
+	
+	fileLogCreate();
 	/*
 	*********************************************
 	Creazione del socket e generazione del pool di thread
