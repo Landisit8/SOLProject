@@ -101,4 +101,9 @@ int closeFile(const char* pathname);
 */
 int removeFile(const char* pathname);
 
+/**
+ *	\ 
+ *	\ 
+*/
+void set_p();
 #endif //

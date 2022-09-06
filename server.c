@@ -208,6 +208,7 @@ int operation(int fd_io, msg_t msg)
 	msg_t re;	//ATTENZIONE
 	msg_t* res;
 	msg_l* buffer = NULL;
+	printf("OP: %d\n", msg.op);
 	switch (msg.op)
 	{
 	case OPEN_OP:
@@ -223,7 +224,10 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case READ_OP:
 	//	caso particolare per mandare anche il testo insieme alla risposta
-		printf("sto eseguendo la read\n");
+		LOCK(&log_lock);
+		fprintf(log_file, "Read del file %s\n", msg.nome);	// LogFile
+		UNLOCK(&log_lock);
+		fflush(log_file);
 		LOCK(&setTree);
 		tmp = readFile(&pRoot, msg.nome, &re, msg.cLock);
 		UNLOCK(&setTree);
@@ -236,7 +240,10 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case READS_OP:
-		printf("sto eseguendo la reads\n");
+		LOCK(&log_lock);
+		fprintf(log_file, "Reads del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
 		if (msg.flags == 0)	msg.flags = -1;
 		buffer = alloca(sizeof(msg_l));
 		msg_lStart(buffer);
@@ -266,7 +273,10 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case WRITE_OP:
-		printf("sto eseguendo la write\n");
+		LOCK(&log_lock);
+		fprintf(log_file, "Write del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
 		LOCK(&setTree);
 		tmp = writeFile(&pRoot, msg.nome, msg.str, msg.cLock);
 		UNLOCK(&setTree);
@@ -274,7 +284,10 @@ int operation(int fd_io, msg_t msg)
 		operation(fd_io, msg);
 		break;
 	case APPEND_OP:
-		printf("sto eseguendo la append\n");
+		LOCK(&log_lock);
+		fprintf(log_file, "Append del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
 		LOCK(&setTree);
 		tmp = appendToFile(&pRoot, msg.nome, msg.str, msg.cLock);
 		UNLOCK(&setTree);
@@ -282,7 +295,10 @@ int operation(int fd_io, msg_t msg)
 		operation(fd_io, msg);
 		break;
 	case CLOSE_OP:
-		printf("sto eseguendo la close\n");
+		LOCK(&log_lock);
+		fprintf(log_file, "Close del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
 		LOCK(&setTree);
 		tmp = changeStatus(&pRoot, msg.nome, 1, msg.cLock);
 		UNLOCK(&setTree);
@@ -290,7 +306,10 @@ int operation(int fd_io, msg_t msg)
 		operation(fd_io, msg);
 		break;
 	case REMOVE_OP:
-		printf("sto eseguendo la remove\n");
+		LOCK(&log_lock);
+		fprintf(log_file, "Remove del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
 		LOCK(&setTree);
 		tmp = fileRemove(&pRoot,msg.nome, msg.cLock);
 		UNLOCK(&setTree);
@@ -298,7 +317,10 @@ int operation(int fd_io, msg_t msg)
 		operation(fd_io, msg);
 		break;
 	case LOCK_OP:
-		printf("sto eseguendo la lock :)\n");
+		LOCK(&log_lock);
+		fprintf(log_file, "Lock del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
 		LOCK(&setTree);
 		tmp = changeLock(&pRoot, msg.nome, 0, msg.cLock);
 		UNLOCK(&setTree);
@@ -306,7 +328,10 @@ int operation(int fd_io, msg_t msg)
 		operation(fd_io, msg);
 		break;
 	case UNLOCK_OP:
-		printf("sto eseguendo la unlock :)\n");
+		LOCK(&log_lock);
+		fprintf(log_file, "Unlock del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
 		LOCK(&setTree);
 		tmp = changeLock(&pRoot, msg.nome, 1, msg.cLock);
 		UNLOCK(&setTree);
@@ -314,12 +339,14 @@ int operation(int fd_io, msg_t msg)
 		operation(fd_io, msg);
 		break;
 	case END_OP:
-		printf("sto eseguendo la chiusura del server\n");
 		message(-4, &msg);
 		operation(fd_io, msg);
 		break;
 	case OP_LFU:
-		printf("Memoria piena, si cancella con meno frequenza\n");
+		LOCK(&log_lock);
+		fprintf(log_file, "LFU per il file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
 		LOCK(&setTree);
 		tmp = lfuRemove(&pRoot, &re);
 		UNLOCK(&setTree);
@@ -519,7 +546,7 @@ int main(int argc, char *argv[])
 	addTree(&pRoot, 6, "lori", "Ho fame", 0, 1);
 	addTree(&pRoot, 4, "leonardo", "Leggo", 0, 1);*/
 
-	fprintf(stderr, "%d", getpid());
+	fprintf(stderr, "Numero di processo del server: %d\n", getpid());
 	//	controllo se file config non esiste
 	if ((sktname = malloc(MAXS * sizeof(char))) == NULL)
 	{

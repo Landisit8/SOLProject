@@ -9,7 +9,7 @@ sleep 2s
 #-t 200
 ./client -p -f ./canale -W ./file/Matteo.txt
 ./client -p -f ./canale -r ./file/Matteo.txt
-./client -h
+./client -f ./canale -h
 
 sleep 1s
 

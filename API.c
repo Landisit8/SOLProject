@@ -7,6 +7,7 @@
 #include <conn.h>
 
 int sockfd;
+int p = 0;
 
 int openConnection(const char* sockname, int msec, const struct timespec abstime){
 	errno = 0;
@@ -61,6 +62,11 @@ int closeConnection(const char* sockname){
 		return -1;
 	}
 
+	if (p){
+		fprintf(stdout,"CloseConnection:\n");
+		stampaOp(ris);
+	}
+
 	// chiudo la connessione
 	close(sockfd);
 	// se il server risponde con "ok", chiusura' con successo
@@ -101,6 +107,11 @@ int openFile(const char* pathname, int flags)
 	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
+	}
+
+	if (p){
+		fprintf(stdout,"Open File:\n");
+		stampaOp(tmp.op);
 	}
 
 	if (tmp.op == OP_LFU){
@@ -207,6 +218,11 @@ int readFile(const char* pathname, void** buf, size_t* size)
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
+
+	if (p){
+		fprintf(stdout,"Read File:\n");
+		stampaOp(tmp.op);
+	}
 	
 	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 
@@ -298,7 +314,11 @@ int writeFile(const char* pathname, const char* dirname)
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
-	printf("valore di op: %d\n", tmp.op);
+	if (p){
+		fprintf(stdout,"Write File:\n");
+		stampaOp(tmp.op);
+	}
+
 	if (tmp.op == OP_OK)
 	return 0;
 	
@@ -356,6 +376,11 @@ int lockFile(const char* pathname)
 		perror("ERRORE: lettura risposta lockFile");
 	}
 
+	if (p){
+		fprintf(stdout,"Lcok File:\n");
+		stampaOp(tmp.op);
+	}
+
 	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 
 	printf("ok\n");
@@ -394,6 +419,11 @@ int unlockFile(const char* pathname)
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}	
+
+	if (p){
+		fprintf(stdout,"Unlock File:\n");
+		stampaOp(tmp.op);
+	}
 
 	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 
@@ -434,6 +464,11 @@ int closeFile(const char* pathname)
 		perror("ERRORE: lettura risposta lockFile");
 	}	
 
+	if (p){
+		fprintf(stdout,"Close File:\n");
+		stampaOp(tmp.op);
+	}
+
 	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 	printf("ok\n");
 	return 0;
@@ -470,7 +505,18 @@ int removeFile(const char* pathname)
 		perror("ERRORE: lettura risposta lockFile");
 	}	
 
+	if (p){
+		fprintf(stdout,"Remove File:\n");
+		stampaOp(tmp.op);
+	}
+
 	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
 	printf("ok\n");
 	return 0;
+}
+
+void set_p()
+{
+	if (!p) p = 1;
+	else p = 0;
 }

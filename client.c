@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <getopt.h>
 #include <time.h>
+#include <dirent.h>
 
 #include <API.h>
 #include <utils.h>
@@ -13,7 +14,21 @@
 
 #define MAX 2048
 
+
 char* SOCKET = NULL;
+/*
+int writeDir(const char* dirname,long* n){
+	if (chdir(dirname) == -1)	return 0;
+
+	DIR *d;
+
+	if ((d = opendir(".")) == NULL)	return -1;
+	else {
+		struct dir *file;
+		
+	}
+}
+*/
 
 void listaHelp(){
 	printf("Opzioni:\n\n");
@@ -44,9 +59,13 @@ int parsing (int n, char** valori){
 	char* file;
 	char *tmp = NULL;
 	long num = 0;
+	long nume = -1;
 	char* nome;
+	long sleeptime = 0;
+	int p;
+	char* dirname;
 
-	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1)
+	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1){
 		switch(opt) 
 		{
 			case 'h':
@@ -59,20 +78,37 @@ int parsing (int n, char** valori){
 					perror("ERROR: -f");
 				}
 				abstime.tv_sec += 2;
-				fprintf(stdout, "APERTURA CONNESSIONE A: %s \n", optarg);
+				if (p) fprintf(stdout, "APERTURA CONNESSIONE A: %s \n", optarg);
 				if ((openConnection(optarg, 1000, abstime)) == -1){
 					errno = ECONNREFUSED;
 					perror("openConnection");
 				}
 				SOCKET = alloca(strlen(optarg)+1);
 				strncpy(SOCKET, optarg, strlen(optarg)+1);
-				fprintf(stdout, "Connessione riuscita al socket\n");
+				if (p) fprintf(stdout, "Connessione riuscita al socket\n");
 			break;
 			case 'w':
-					if ((openFile(optarg,3)) == -1){
-					errno = ECONNREFUSED;
-					perror("openFile");
-				}
+					token = strtok(optarg, ",");
+					while (token != NULL){
+						// prendo il dirname
+						if (num == 0){
+							dirname = alloca(strlen(token));
+							strncpy(dirname, token, strlen(token));
+							num++;;
+						}
+						if (num == 1) isNumber(token, &num);
+						token = strtok(NULL,",");
+					}
+					if (p){
+						if (n>0) fprintf(stdout,"Scrivo %ld file ", nume);
+						else fprintf(stdout, "Scrivo tutti i file ");
+						fprintf(stdout, "da questa cartella %s\n", dirname);
+					}
+
+					if (nume == 0)	n = -1;
+
+					//if (writeDir(dirname, &nume) < 0)
+					return -1;		
 			break;
 			case 'W':
 				token = strtok(optarg,",");
@@ -83,7 +119,7 @@ int parsing (int n, char** valori){
 					strncpy(file, token, strlen(token) + 1);
 					file[strlen(token) + 1] = '\0';
 					r = writeFile(file, NULL);
-					printf("valore di r: %d\n", r);
+					//printf("valore di r: %d\n", r);
 					if(r == -1)
 					{
 						perror("ERROR: write to file");
@@ -126,6 +162,12 @@ int parsing (int n, char** valori){
 			
 			break;
 			case 't':
+				if((isNumber(optarg, &sleeptime)) == 1)
+				{
+					printf("opzione %s non e' un numero\n", optarg);
+					return EXIT_FAILURE;
+				}
+				if(p) fprintf(stdout, "Timeout tra le richieste impostato su %ld\n\n", sleeptime);
 
 			break;
 			case 'l':
@@ -150,7 +192,9 @@ int parsing (int n, char** valori){
 				}
 			break;
 			case 'p':
-
+				printf("P attivato\n\n");
+                p = 1;
+				set_p();
 			break;
 			case ':': 
                	printf("Errore, lista dei comandi: \n");
@@ -161,6 +205,8 @@ int parsing (int n, char** valori){
 				listaHelp();
 			break;
 		}
+	sleep(sleeptime*1000);
+	}
 	return 0;
 }
 
