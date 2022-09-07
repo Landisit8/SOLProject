@@ -11,7 +11,9 @@ typedef struct tree{
 	int freq;				//	frequenza, il numero di volte che un file viene fatta una qualsiasi operazione
 	char* nome;		
 	char* testo;
-	int stato;				//	stato, indica se un file e' chiuso o aperto
+	int stato;				//	stato, indica se un file e' chiuso(1) o aperto(0)
+	int lucchetto;			//	lucchetto, indica se un file è lock(0) or unlock(1)
+	pid_t sLock;
 	struct tree *left;
 	struct tree *right;
 } nodo;
@@ -19,13 +21,13 @@ typedef struct tree{
 /** 
  * \crea un nuovo nodo   
 */
-nodo* newNode(int freq, char* nome, char* testo, int stato);
+nodo* newNode(int freq, char* nome, char* testo, int stato, int lock);
 
 /** 
  * \aggiungo un valore nell'albero.
  * \return n ok  NULL non esiste l'albero   
 */
-nodo* addTree(nodo* n, int freq, char* nome, char* testo, int stato);
+nodo* addTree(nodo* n, int freq, char* nome, char* testo, int stato, int lock);
 
 /** 
  * \Ricerco il minimo valore nell'intero albero e salvo l'informazione in min e name.
@@ -64,14 +66,14 @@ nodo* searchLeaf (nodo* n);
  * \si scambia con il nodo con la frequenza minima trovata con la foglia e si cancella la foglia 
  * \return n ok  NULL non esiste l'albero   
 */
-int lfuRemove(nodo* n);
+int lfuRemove(nodo* n, msg_t* text);
 
 /** 
  * \cerca il nome nel nodo poi si cerca una foglia qualsisi e con le considerazioni della funzione searchLeaf
  * \si scambia con la foglia e cancello la foglia 
  * \return n ok  NULL non esiste l'albero   
 */
-int fileRemove(nodo* root, char* nome);
+int fileRemove(nodo* root, char* nome, pid_t cLock);
 
 /** 
  * \se viene fatta una operazione di richiesta del cient, aumento la frequenza  
@@ -83,31 +85,48 @@ int addFreqquenza(int fre);
  * \cambia lo stato del nodo
  * \return il valore cambiato dello stato //lb operazione
 */
-int changeStatus(nodo* root, char* name, int lb);
+int changeStatus(nodo* root, char* name, int lb, pid_t cLock);
+
+/** 
+ * \cambia lo stato del lucchetto
+ * \return il valore cambiato dello stato //lb operazione
+*/ 
+int changeLock(nodo* root, char* name, int lb, pid_t cLock);
+
+/** 
+ * \ A seconda del valore di flags ci sono 4 opzioni diverse
+ * 0: creazione di un nuovo nodo, in caso che l'elemento esista già ritorna errore.
+ * 1: rendo aperto lo stato e lock la Lock.
+ * 2: cambio solo lo stato.
+ * 3: faccio tutte le opzioni indicate prima.
+ * defalut: Tipologia di errore di valore in ingresso.
+ * \return 0 in caso di successo o si blocca prima nel caso delle funzioni dichiarate.
+*/
+int openFile(nodo* root, char* name, int flags, pid_t cLock);
 
 /** 
  * \
  * \ 
 */
-int openFile(nodo* root, char* name);
+int readFile(nodo* root, char* name, msg_t* text, pid_t cLock);
 
 /** 
  * \
  * \ 
 */
-int readFile(nodo* root, char* name);
+void readsFile(nodo* root, int n, pid_t cLock, msg_l* buffer);
 
 /** 
  * \
  * \ 
 */
-int appendToFile(nodo* root, char* name, char* text);
+int appendToFile(nodo* root, char* name, char* text, pid_t cLock);
 
 /** 
  * \
  * \ 
 */
-int writeFile(nodo* root, char* name, char* text);
+int writeFile(nodo* root, char* name, char* text, pid_t cLock);
 
 void print (nodo* n);
 

@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <getopt.h>
 #include <time.h>
+#include <dirent.h>
 
 #include <API.h>
 #include <utils.h>
@@ -13,7 +14,21 @@
 
 #define MAX 2048
 
+
 char* SOCKET = NULL;
+/*
+int writeDir(const char* dirname,long* n){
+	if (chdir(dirname) == -1)	return 0;
+
+	DIR *d;
+
+	if ((d = opendir(".")) == NULL)	return -1;
+	else {
+		struct dir *file;
+		
+	}
+}
+*/
 
 void listaHelp(){
 	printf("Opzioni:\n\n");
@@ -37,89 +52,172 @@ void listaHelp(){
 int parsing (int n, char** valori){
 	struct timespec abstime;
 	int opt;
+	void* buf = NULL;
+	size_t sz;
+	int r;
+	char* token;
+	char* file;
+	char *tmp = NULL;
+	long num = 0;
+	long nume = -1;
+	char* nome;
+	long sleeptime = 0;
+	int p;
+	char* dirname;
 
-	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1)
+	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1){
 		switch(opt) 
 		{
 			case 'h':
 				listaHelp();
-				return -1;
 			break;
 			case 'f':
 				//	Preparazione alla connessione
 				if ((clock_gettime(CLOCK_REALTIME, &abstime)) == -1){
 					errno = -1;
 					perror("ERROR: -f");
-					return -1;
 				}
 				abstime.tv_sec += 2;
-				fprintf(stdout, "APERTURA CONNESSIONE A: %s \n", optarg);
+				if (p) fprintf(stdout, "APERTURA CONNESSIONE A: %s \n", optarg);
 				if ((openConnection(optarg, 1000, abstime)) == -1){
 					errno = ECONNREFUSED;
 					perror("openConnection");
-					return -1;
 				}
 				SOCKET = alloca(strlen(optarg)+1);
 				strncpy(SOCKET, optarg, strlen(optarg)+1);
-				fprintf(stdout, "Connessione riuscita al socket\n");
+				if (p) fprintf(stdout, "Connessione riuscita al socket\n");
 			break;
 			case 'w':
+					token = strtok(optarg, ",");
+					while (token != NULL){
+						// prendo il dirname
+						if (num == 0){
+							dirname = alloca(strlen(token));
+							strncpy(dirname, token, strlen(token));
+							num++;;
+						}
+						if (num == 1) isNumber(token, &num);
+						token = strtok(NULL,",");
+					}
+					if (p){
+						if (n>0) fprintf(stdout,"Scrivo %ld file ", nume);
+						else fprintf(stdout, "Scrivo tutti i file ");
+						fprintf(stdout, "da questa cartella %s\n", dirname);
+					}
 
+					if (nume == 0)	n = -1;
+
+					//if (writeDir(dirname, &nume) < 0)
+					return -1;		
 			break;
 			case 'W':
+				token = strtok(optarg,",");
 
+				while(token != NULL)
+				{
+					file = alloca(strlen(token) + 1);
+					strncpy(file, token, strlen(token) + 1);
+					file[strlen(token) + 1] = '\0';
+					r = writeFile(file, NULL);
+					//printf("valore di r: %d\n", r);
+					if(r == -1)
+					{
+						perror("ERROR: write to file");
+					}
+					token = strtok(NULL, ",");
+				}
 			break;
 			case 'D':
 
 			break;
 			case 'r':
-
+				r = readFile(optarg, &buf, &sz);
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("readFile");
+				}
+				if (r == 0){	//da aggiungere il controllo se la cartella è NULL
+					nome = strrchr(optarg, '/');
+					nome++; 
+					writeBytes(nome,buf,sz,"./read");
+				}
 			break;
 			case 'R':
+				//	preso da internet, https://stackoverflow.com/questions/1052746/getopt-does-not-parse-optional-arguments-to-parameters
+				tmp = optarg;
+				//	controllo se c'è l'argomento opzionale
+				if (!optarg && NULL != valori[optind] && '-' != valori[optind][0]){
+					tmp = valori[optind++];
+				}
+				//	se tmp esiste:
+				if (tmp) isNumber(tmp, &num);
 
+				r = readNFiles(num, "./read");
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("readNFiles");
+				}
 			break;
 			case 'd':
-
+			
 			break;
 			case 't':
+				if((isNumber(optarg, &sleeptime)) == 1)
+				{
+					printf("opzione %s non e' un numero\n", optarg);
+					return EXIT_FAILURE;
+				}
+				if(p) fprintf(stdout, "Timeout tra le richieste impostato su %ld\n\n", sleeptime);
 
 			break;
 			case 'l':
-
+				r = lockFile(optarg);
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("lockFile");
+				}
 			break;
 			case 'u':
-
+				r = unlockFile(optarg);
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("unlockFile");
+				}
 			break;
 			case 'c':
-
+				r = removeFile(optarg);
+				if (r == -1){
+					errno = ECONNREFUSED;
+					perror("removeFile");
+				}
 			break;
 			case 'p':
-
+				printf("P attivato\n\n");
+                p = 1;
+				set_p();
 			break;
 			case ':': 
                	printf("Errore, lista dei comandi: \n");
 				listaHelp();
-				return -1;
 			break;
             case '?': 
                 printf("Errore, lista dei comandi: \n");
 				listaHelp();
-				return -1;
 			break;
 		}
+	sleep(sleeptime*1000);
+	}
 	return 0;
 }
 
 
 int main(int argc, char* argv[])
 {
-	int tmp;
-	tmp = parsing(argc,argv);
-	if (tmp == 0)
-		if(closeConnection(SOCKET) != 0)
-    	{
-        	perror("ERROR: Unable to close connection correctly with server");
-        	exit(EXIT_FAILURE);
-    	}
+	parsing(argc,argv);
+	if(closeConnection(SOCKET) != 0)
+    {
+        perror("ERROR: Unable to close connection correctly with server");
+        exit(EXIT_FAILURE);
+    }
 	return 0;
 }

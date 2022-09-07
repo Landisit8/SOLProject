@@ -177,6 +177,8 @@ typedef struct msg
   int lNome;
   int lStr;
   long fd_c;
+  int flags;
+  pid_t cLock;
   struct msg *next;
 } msg_t;
 
@@ -230,6 +232,8 @@ static inline void msgcpy(msg_t *destination, msg_t *source)
   destination->lNome = source->lNome;
   destination->lStr = source->lStr;
   destination->op = source->op;
+  destination->flags = source->flags;
+  destination->cLock = source->cLock;
 
   memcpy(destination->nome, source->nome, strlen(source->nome));
   memcpy(destination->str, source->str, source->lStr);
@@ -282,20 +286,35 @@ static inline void msgPopReturn(msg_l *list, msg_t **toReturn)
   return;
 }
 
-#endif /* _UTIL_H */
-
-/*
-void print (nodo* n){
-
-  if(n == NULL) return;
-  printf("stampa elemento:\n");
-
-  printf("Frequenza: %d\n", n->freq);
-  printf("Nome: %s\n", n->nome);
-  printf("Testo: %s\n", n->testo);
-  printf("Stato: %d\n", n->stato);
-  printf("\n");
-  print(n->left);
-  print(n->right);
+static inline void stampaOp(ops op)
+{
+  switch (op)
+  {
+  case OP_OK:
+    printf("OPERAZIONE ESEGUITA CON SUCCESSO\n");
+    break;
+  case OP_FOK:
+    printf("OPERAZIONE ESEGUITA CON NON SUCCESSO\n");
+    break;
+  case OP_BLOCK:
+    printf("FILE BLOCCATO\n");
+    break;
+  case OP_FFL_SUCH:
+    printf("FILE RICHIESTO NON ESISTE\n");
+    break;
+  case OP_MSG_SIZE:
+    printf("MESSAGGIO TROPPO LUNGO\n");
+    break;
+  case OP_LFU:
+    printf("RIMOZIONE DI UN FILE IN CASO DI ECCESSO DI DATI\n");
+    break;
+  case OP_END:
+    printf("CHIUSURA' DELLA CONNESSIONE\n");
+    break;
+  default:
+    fprintf(stderr,"COMMAND NOT FOUND\n");
+    break;
+  }
+  fflush(stdout);
 }
-*/
+#endif /* _UTIL_H */

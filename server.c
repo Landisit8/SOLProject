@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <sys/select.h>
 #include <pthread.h>
+#include <signal.h>
 
 #include <utils.h>
 #include <conn.h>
@@ -15,13 +16,21 @@
 #include <lfucache.h>
 
 #define config "./setup/config.txt"
-
 char *sktname = NULL;
 
 int fdmax;
 long memMax;
+pthread_mutex_t setMemMax = PTHREAD_MUTEX_INITIALIZER;
 long numMax;
+pthread_mutex_t setNumMax = PTHREAD_MUTEX_INITIALIZER;
+long thrw;
 fd_set set;
+pthread_mutex_t setLock = PTHREAD_MUTEX_INITIALIZER;
+int cont = 0;
+pthread_mutex_t setCont = PTHREAD_MUTEX_INITIALIZER;
+FILE* log_file = NULL;
+pthread_mutex_t log_lock = PTHREAD_MUTEX_INITIALIZER;
+char* fileLogName;
 
 //	Pull di thread vuoto
 pthread_t *thr = NULL;
@@ -31,7 +40,17 @@ msg_l *attesa;
 pthread_mutex_t richiesta = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t wait_attesa = PTHREAD_COND_INITIALIZER;
 
-nodo pRoot = {0, "pRoot", "abcd", 1, NULL, NULL};
+//	gestione dei segnali
+volatile sig_atomic_t sig_interruzione = 0;
+volatile sig_atomic_t sig_chiusura = 0;
+volatile sig_atomic_t interrompi_segnali = 0;
+
+pthread_t signal_handler;
+
+sigset_t signal_mask;
+
+nodo pRoot = {0, "pRoot", "abcd", 1, 1, 0, NULL, NULL,};
+pthread_mutex_t setTree = PTHREAD_MUTEX_INITIALIZER;
 
 void cleanup()
 {
@@ -48,9 +67,9 @@ int updatemax(fd_set set, int fdmax)
 	return -1;
 }
 
-//	attraverso il file config che contiene i 4 parametri, estrabolo le informaizoni
-//	e le carico in 4 variabili.
-int parsing(long *thrw, long *memMax, char **sktname, long *numMax)
+//	attraverso il file config che contiene i 5 parametri, estrabolo le informaizoni
+//	e le carico in 5 variabili.
+int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileLogName)
 {
 	//	descrittori
 	FILE *fd = NULL;
@@ -117,8 +136,11 @@ int parsing(long *thrw, long *memMax, char **sktname, long *numMax)
 		case 1:
 			if (c < 3)
 				fprintf(stderr, "non hai inserito un numero \n");
-			else
-				strncpy(*sktname, string, MAXS);
+			else {
+				c++;
+				if (c == 4)	strncpy(*sktname, string, MAXS);
+				else if (c == 5) strncpy(*fileLogName, string, MAXS);
+			}
 			break;
 		case 2:
 			fprintf(stderr, "overflow/underflow \n");
@@ -133,6 +155,22 @@ int parsing(long *thrw, long *memMax, char **sktname, long *numMax)
 	return 0;
 }
 
+void fileLogCreate(){
+	char* path = alloca(7 + strlen(fileLogName));
+	sprintf(path, "./%s.txt", fileLogName);
+
+	log_file = fopen(path, "w");
+
+	if (log_file != NULL){
+		fprintf(log_file,"LOG FILE\n");
+		fflush(log_file);
+	}
+
+	free(path);
+
+	return;
+}
+
 void message(int back, msg_t *msg)
 {
 	switch (back)
@@ -145,7 +183,7 @@ void message(int back, msg_t *msg)
 	case -1:
 		msg->op = OP_FOK;
 		break;
-	//	la funzione e' bloccata dallo stato
+	//	la funzione e' bloccata dallo stato o dalla lock
 	case -2:
 		msg->op = OP_BLOCK;
 		break;
@@ -157,6 +195,9 @@ void message(int back, msg_t *msg)
 	case -4:
 		msg->op = OP_END;
 		break;
+	case -5:
+		msg->op = OP_LFU;
+		break;
 	}
 }
 
@@ -164,62 +205,175 @@ int operation(int fd_io, msg_t msg)
 {
 	printf("sono dentro operation\n");
 	int tmp;
+	msg_t re;	//ATTENZIONE
+	msg_t* res;
+	msg_l* buffer = NULL;
+	printf("OP: %d\n", msg.op);
 	switch (msg.op)
 	{
 	case OPEN_OP:
-		printf("sto eseguendo la open\n");
-		tmp = openFile(&pRoot, msg.nome);
+		LOCK(&log_lock);
+		fprintf(log_file, "Open del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
+		LOCK(&setTree);
+		tmp = openFile(&pRoot, msg.nome, msg.flags, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
-		printf("%d\n", msg.op);
 		operation(fd_io, msg);
 		break;
 	case READ_OP:
-		printf("sto eseguendo la read\n");
-		tmp = readFile(&pRoot, msg.nome);
-		message(tmp, &msg);
-		operation(fd_io, msg);
+	//	caso particolare per mandare anche il testo insieme alla risposta
+		LOCK(&log_lock);
+		fprintf(log_file, "Read del file %s\n", msg.nome);	// LogFile
+		UNLOCK(&log_lock);
+		fflush(log_file);
+		LOCK(&setTree);
+		tmp = readFile(&pRoot, msg.nome, &re, msg.cLock);
+		UNLOCK(&setTree);
+		message(tmp, &re);
+		if (writen(fd_io, &re, sizeof(msg_t)) <= 0)
+		{
+			errno = -1;
+			perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+			return -1;
+		}
+		break;
+	case READS_OP:
+		LOCK(&log_lock);
+		fprintf(log_file, "Reads del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
+		if (msg.flags == 0)	msg.flags = -1;
+		buffer = alloca(sizeof(msg_l));
+		msg_lStart(buffer);
+		LOCK(&setTree);
+		readsFile(&pRoot, msg.flags, msg.cLock, buffer);
+		UNLOCK(&setTree);
+		if (buffer->lung == 0){
+			res->op = 0;
+			if (writen(fd_io, res, sizeof(msg_t)) <= 0)
+			{
+				errno = -1;
+				perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+			}		
+		}
+		while ((buffer->lung) > 0){
+			res = alloca(sizeof(msg_t));
+			msgPopReturn(buffer, &res);
+			res->flags = buffer->lung + 1;
+			if (writen(fd_io, res, sizeof(msg_t)) <= 0)
+			{
+				errno = -1;
+				perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+			}
+			free(res);
+		}
 		break;
 	case WRITE_OP:
-		printf("sto eseguendo la write\n");
-		tmp = writeFile(&pRoot, msg.nome, msg.str);
+		LOCK(&log_lock);
+		fprintf(log_file, "Write del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
+		LOCK(&setTree);
+		tmp = writeFile(&pRoot, msg.nome, msg.str, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case APPEND_OP:
-		printf("sto eseguendo la append\n");
-		tmp = appendToFile(&pRoot, msg.nome, msg.str);
-		message(tmp, &msg);
-		operation(fd_io, msg);
+		LOCK(&log_lock);
+		fprintf(log_file, "Append del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
+		LOCK(&setTree);
+		tmp = appendToFile(&pRoot, msg.nome, msg.str, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case CLOSE_OP:
-		printf("sto eseguendo la close\n");
-		tmp = changeStatus(&pRoot, msg.nome, 1);
+		LOCK(&log_lock);
+		fprintf(log_file, "Close del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
+		LOCK(&setTree);
+		tmp = changeStatus(&pRoot, msg.nome, 1, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case REMOVE_OP:
-		printf("sto eseguendo la lfuremove\n");
-		// tmp = fileRemove(&pRoot,msg.nome);
-		tmp = lfuRemove(&pRoot);
+		LOCK(&log_lock);
+		fprintf(log_file, "Remove del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
+		LOCK(&setTree);
+		tmp = fileRemove(&pRoot,msg.nome, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case LOCK_OP:
-		printf("sto eseguendo la stato :)\n");
-		tmp = changeStatus(&pRoot, msg.nome, 0);
+		LOCK(&log_lock);
+		fprintf(log_file, "Lock del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
+		LOCK(&setTree);
+		tmp = changeLock(&pRoot, msg.nome, 0, msg.cLock);
+		UNLOCK(&setTree);
+		message(tmp, &msg);
+		operation(fd_io, msg);
+		break;
+	case UNLOCK_OP:
+		LOCK(&log_lock);
+		fprintf(log_file, "Unlock del file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
+		LOCK(&setTree);
+		tmp = changeLock(&pRoot, msg.nome, 1, msg.cLock);
+		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
 		break;
 	case END_OP:
-		printf("sto eseguendo la chiusura del server\n");
 		message(-4, &msg);
 		operation(fd_io, msg);
 		break;
+	case OP_LFU:
+		LOCK(&log_lock);
+		fprintf(log_file, "LFU per il file %s\n", msg.nome);	// LogFile
+		fflush(log_file);
+		UNLOCK(&log_lock);
+		LOCK(&setTree);
+		tmp = lfuRemove(&pRoot, &re);
+		UNLOCK(&setTree);
+		LOCK(&setCont);
+		cont++;
+		UNLOCK(&setCont);
+		LOCK(&setNumMax);
+		numMax++;
+		UNLOCK(&setNumMax);
+		re.op = OP_LFU;
+		if (tmp != 0){
+			message(tmp,&msg);
+			operation(fd_io, msg);
+		}
+		else{
+			if (writen(fd_io, &re, sizeof(msg_t)) <= 0)
+			{
+				errno = -1;
+				perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
+				return -1;
+			}
+		}
+		break;
 	case OP_OK:
 		printf("Sto mandando ok\n");
-		if (writen(fd_io, &msg.op, sizeof(ops)) <= 0)
+		//	da cambiare il ritorno del messaggio, da op a msg x tutti
+		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -228,7 +382,7 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case OP_FOK:
 		printf("sto mandando no ok\n");
-		if (writen(fd_io, &msg, sizeof(int)) <= 0)
+		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE11: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -236,7 +390,8 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case OP_BLOCK:
-		if (writen(fd_io, &msg, sizeof(int)) <= 0)
+		printf("sto mandando che il file è bloccato\n");
+		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE12: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -245,7 +400,8 @@ int operation(int fd_io, msg_t msg)
 
 		break;
 	case OP_FFL_SUCH:
-		if (writen(fd_io, &msg, sizeof(int)) <= 0)
+		printf("file richiesto non e' disponibile\n");
+		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE13: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -253,7 +409,8 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case OP_MSG_SIZE:
-		if (writen(fd_io, &msg, sizeof(int)) <= 0)
+		printf("Messaggio troppo lungo\n");
+		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE14: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -261,7 +418,9 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case OP_END:
-		fprintf(stderr, "sono dentro OP_END");
+		printf("Sto Chiudendo la connessione\n");
+		fprintf(log_file, "Chiusurà al client %d\n", fd_io);	// LogFile
+		fflush(log_file);
 		fflush(stderr);
 		if (writen(fd_io, &msg.op, sizeof(ops)) <= 0)
 		{
@@ -283,35 +442,111 @@ int operation(int fd_io, msg_t msg)
 void *readValue(void *arg)
 {
 	fprintf(stderr, "Dentro readValue\n");
-	for (;;)
+
+	//è stato ricevuto un SIGINT o un SIGQUIT
+	while (!sig_interruzione)
 	{
-		msg_t *msg;
 
-		pthread_mutex_lock(&richiesta);
-		pthread_cond_wait(&wait_attesa, &richiesta);
-		msgPopReturn(attesa, &msg);
-
-		fprintf(stderr, "prelevo coda\n");
-		pthread_mutex_unlock(&richiesta);
-
-		operation(msg->fd_c, *msg);
-
-		if (msg->op != 15)
-		{
-			FD_SET(msg->fd_c, &set);
+		//SIGHUP ricevuto e ho terminato di servire tutte le richieste rimanenti
+		if (sig_chiusura && attesa->testa == NULL){
+			fprintf(stderr, "SIGHUP: terminato\n");
+			break;
 		}
+
+		msg_t *msg = alloca(sizeof(msg_t));
+
+		LOCK(&richiesta);
+		WAIT(&wait_attesa, &richiesta);
+
+		//	sse non sono stati mandati segnali di interruzione forzata controllo se ci sono richieste da servire
+		if (!sig_interruzione && attesa->testa != NULL){
+			msgPopReturn(attesa, &msg);
+
+			UNLOCK(&richiesta);
+
+			operation(msg->fd_c, *msg);
+
+		if (msg->op != 8)
+			{
+				fprintf(stderr, "reinserisco client\n");
+				LOCK(&setLock); //faccio lock sul set prima di reinserire la richiesta
+				FD_SET(msg->fd_c, &set);
+				UNLOCK(&setLock);
+			}
+		}
+		else	UNLOCK(&richiesta);	
+		free(msg);
 	}
 	fflush(stderr);
-	return NULL;
+	pthread_exit(NULL);
+}
+
+void* signalhandler(void*arg)
+{
+	fprintf(stderr,"\nSignal handler activared\n");
+	//variabile per ricevere il segnale
+	int segnale = -1;
+
+	//quando ricevo un segnale il thread si ferma
+	while (!interrompi_segnali)
+	{
+		//aspetto il segnale
+		sigwait(&signal_mask, &segnale);
+
+		//segnale ricevuto
+		interrompi_segnali = 1;
+
+		//ricevo un segnale per fermare immediatamente il server
+		if (segnale == SIGINT || segnale == SIGQUIT){
+			fprintf(stderr, "SIGINT o SIGQUIT\n");
+			//	segnalo ai worker
+			sig_interruzione = 1;
+			//sblocco la list
+			pthread_cond_broadcast(&wait_attesa);
+
+			//chiudo tutti i client connessi e annullo le le richieste
+			msg_t* msg = attesa->testa;
+			msg_t* msg_n;
+
+			while (msg != NULL){
+				close(msg->fd_c);
+				msg_n = msg->next;
+				free(msg);
+				msg = msg_n;
+			}
+
+			//chiudo tutti i thread
+			for (int i=0;i<thrw;i++)
+				pthread_join(thr[i], NULL);
+		}
+
+		//chiudo il server dopo aver sentito tutte le richieste
+		if (segnale == SIGHUP){
+			fprintf(stderr, "SIGHUP\n");
+			//segnalo ai worker
+			sig_chiusura =1;
+			//sblocco la lista
+			pthread_cond_broadcast(&wait_attesa);
+			//aspetto i thread
+			for(int i=0;i<thrw;i++)
+				pthread_join(thr[i], NULL);
+		}
+	}
+	fprintf(stderr, "Uscita signal");
+	pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[])
 {
 	long thrw;
-	addTree(&pRoot, 0, "ema", "gay", 0);
-	addTree(&pRoot, 5, "amelia", "hola", 0);
-	addTree(&pRoot, 7, "fede", "bello", 0);
+	/*
+	addTree(&pRoot, 0, "ema", "gay", 0, 1);
+	addTree(&pRoot, 5, "amelia", "hola", 0, 1);
+	addTree(&pRoot, 7, "fede", "bello", 1, 1);
+	addTree(&pRoot, 6, "lori", "Ho fame", 0, 1);
+	addTree(&pRoot, 4, "leonardo", "Leggo", 0, 1);*/
 
+	fprintf(stderr, "Numero di processo del server: %d\n", getpid());
 	//	controllo se file config non esiste
 	if ((sktname = malloc(MAXS * sizeof(char))) == NULL)
 	{
@@ -321,12 +556,37 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	parsing(&thrw, &memMax, &sktname, &numMax);
+	fileLogName = alloca(MAXS);
+
+	parsing(&thrw, &memMax, &sktname, &numMax, &fileLogName);
 
 	printf("nthread:%ld - memoria:%ld - socketname:%s - nfile massimi:%ld\n", thrw, memMax, sktname, numMax);
 
 	cleanup();
 	atexit(cleanup);
+	
+	fileLogCreate();
+
+	/*
+	*********************************************
+	Creazione del socket e generazione del pool di thread
+	*********************************************
+	*/
+	int r = 0;
+
+	sigset_t oldmask;
+
+	SYSCALL_EXIT("sigemptyset", r, sigemptyset(&signal_mask), "ERRORE: sigemptyset", "");
+	SYSCALL_EXIT("sigaddset", r, sigaddset(&signal_mask, SIGHUP), "ERRORE: sigaddset", "");
+	SYSCALL_EXIT("sigaddset", r, sigaddset(&signal_mask, SIGINT), "ERRORE: sigaddset", "");
+	SYSCALL_EXIT("sigaddset", r, sigaddset(&signal_mask, SIGQUIT), "ERRORE: sigaddset", "");
+	
+	//applico la maschera
+	SYSCALL_EXIT("pthread_sigmask", r, pthread_sigmask(SIG_SETMASK, &signal_mask, &oldmask), "ERRORE: pthread_sigmask", "");
+
+	//attivo il thread per la gestione dei segnali
+    SYSCALL_EXIT("pthread_create", r, pthread_create(&signal_handler, NULL, &signalhandler, NULL), "ERROR: pthread_create", "");  
+
 	/*
 	*********************************************
 	Creazione del socket e generazione del pool di thread
@@ -384,12 +644,16 @@ int main(int argc, char *argv[])
 	//	il massimo dei descrittori
 	fdmax = fd;
 
+	struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 1;
+
 	// loop infinito
-	for (;;)
+	while(!sig_chiusura && !sig_interruzione)
 	{
 		// preparo la maschera per la select
 		tmpset = set;
-		if (select(fdmax + 1, &tmpset, NULL, NULL, NULL) == -1)
+		if (select(fdmax + 1, &tmpset, NULL, NULL, &timeout) == -1)
 		{
 			// attenzione al +1
 			perror("select");
@@ -407,36 +671,25 @@ int main(int argc, char *argv[])
 					//...accetto la connessione
 					SYSCALL_EXIT("accept", fd_c, accept(fd, (struct sockaddr *)NULL, NULL), "accept", "");
 					FD_SET(fd_c, &set); // aggiungo il descrittore al master set
+					fprintf(log_file, "Connessione al client %d\n", fd_c);	// LogFile
+					fflush(log_file);
 					if (fd_c > fdmax)
 						fdmax = fd_c; // ricalcolo il massimo
 					printf("Nuovo max: %d\n", fdmax);
 					continue;
 				}
-				/*
-				fd_c = fd_s; // e' una nuova richiesta da un client già connesso
-				// eseguo il comando e se c'e' un errore lo tolgo dal master set
-				if (readValue(fd_c) < 0)
-				{
-					close(fd_c);
-					FD_CLR(fd_c, &set);
-					// controllo se deve aggiornare il massimo
-					// senza questo gli fd risultano sempre in richiesta di attenzione non so perchè
-					if (fd_c == fdmax)
-						fdmax = updatemax(set, fdmax);
-				}
-				*/
 				fd_c = fd_s;
 
 				msg_t *rqs = alloca(sizeof(msg_t));
 
-				if (readn(fd_c, rqs, sizeof(msg_t)))
+				if (readn(fd_c, rqs, sizeof(msg_t)) <= 0)
 				{
-					perror("ERROR: lettura del messaggio");
+					perror("ERRORE: lettura del messaggio");
 					return -1;
 				}
 
 				//	tolgo il client dal set per evitare messaggi doppi
-				FD_CLR(fd_c, &tmpset);
+				FD_CLR(fd_c, &set);
 
 				rqs->fd_c = fd_c;
 
@@ -448,6 +701,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	close(fd);
+	unlink(sktname);
 	free(sktname);
 	return 0;
 }
