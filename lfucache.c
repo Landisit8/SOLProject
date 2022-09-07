@@ -1,8 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <utils.h>
-
 #include <lfucache.h>
 
 extern long memMax;
@@ -42,15 +37,10 @@ nodo* findTreeMin(nodo* n, int* min, char** name)
 {	
 	if (n == NULL)	return NULL;
 	if (strcmp(n->nome, "pRoot") != 0) {
-		fprintf(stderr,"minimo attule:%d\n", *min);
-		fprintf(stderr,"frequenza attuale:%d - nome attuale:%s\n", n->freq,n->nome);
 		if (*min > (n->freq))	
 		{
-			fprintf(stderr,"frequenza:%d - nome:%s\n", n->freq, n->nome);
 			*min = n->freq;
-			fprintf(stderr,"nuovo min:%d\n", *min);
 			strcpy(*name,n->nome); 
-			fprintf(stderr,"nome del minimo:%s\n", *name);
 		}
 	}
 	findTreeMin(n->left,min,name);
@@ -86,11 +76,7 @@ int swapTree (nodo* a, nodo* b)
 	a->stato = b->stato;
 	b->freq = tmp->freq;
 
-	printf("%s;%s\n", b->nome, tmp->nome);
-	printf("%zu;%zu\n", strlen(b->nome), strlen(tmp->nome));
-
 	if (realloc(b->nome, strlen(tmp->nome)) == NULL)	return -1;	//EMEMORY
-	printf("%s;%s\n", b->nome, tmp->nome);
 
 	//	meglio memcpy di strcpy
 	strcpy(b->nome, tmp->nome);
@@ -110,7 +96,6 @@ nodo* isLeaf (nodo* parent)
 	if (parent->left == NULL && parent->right == NULL)
 	{
 		nodo* tmp = newNode(parent->freq,parent->nome,parent->testo,parent->stato, parent->lucchetto);
-		printf("sono madre\n");
 		return tmp;
 	}
 	return NULL;
@@ -132,17 +117,13 @@ nodo* searchLeaf (nodo* n)
 			n->left = NULL;
 			return leaf;
 		}
-		printf("foglia destra\n");
 		if ((leaf = isLeaf(n->right)) != NULL)
 		{
 			n->right = NULL;
-			printf("faccio la return\n");
 			return leaf;
 		}
-		printf("ricorsiva\n");
 		leaf = searchLeaf(n->left);
 	}
-	printf("guardo se il nodo sinistro e' nullo\n");
 	if (n->left == NULL && n->right != NULL)
 	{
 		if ((leaf = isLeaf(n->right)) != NULL)
@@ -152,7 +133,6 @@ nodo* searchLeaf (nodo* n)
 		}
 		leaf = searchLeaf(n->right);
 	}
-	printf("guardo il nodo destro se e' nullo\n");
 	if (n->left != NULL && n->right == NULL)
 	{
 		if ((leaf = isLeaf(n->left)) != NULL)
@@ -173,7 +153,7 @@ int lfuRemove(nodo* n, msg_t* text)
 	if (n == NULL)	return -3;
 	if (n->left == NULL && n->right == NULL)	return -1;
 	int min;
-	char* name = malloc(MAXS*sizeof(char));
+	char* name = alloca(MAXS*sizeof(char));
 
 	if (n->left == NULL){	min = n->right->freq;	name = n->right->nome; }
 	else { min = n->left->freq;	name = n->left->nome; }
@@ -183,12 +163,9 @@ int lfuRemove(nodo* n, msg_t* text)
 	
 	//	cerco il nodo minimo e trovo il nome
 	if (!findTreeMin(n,&min,&name))	return -3;
-	printf("Minima frequenza: %d\n", min);
-	printf("nome utente: %s\n", name);
 
 	// cerco il nodo dal nome del nodo minimo e ottengo un riferimento
 	if (!(find = findTreeFromName(n,name)))	return -3;
-	printf("convertito in nodo, nome: %s\n", find->nome);
 
 	//carico gli elementi in "text" per caricarlo nella cartella apposita
 	strncpy(text->str,find->testo, strlen(find->testo));
@@ -198,10 +175,8 @@ int lfuRemove(nodo* n, msg_t* text)
 
 	//	cerco una foglia generica
 	if (!(leaf = searchLeaf(n)))	return -3;
-	printf("foglia:%s\n", leaf->nome);
 
 	if (swapTree(leaf, find) != 0)	return -1;
-	printf("find:%s <-> leaf:%s\n", find->nome, leaf->nome);
 	free(leaf);
 	return 0;
 }
@@ -228,8 +203,6 @@ void print (nodo* n){
 
 int openFile(nodo* root, char* name, int flags, pid_t cLock)
 {
-	printf("Sono dentro openFile\n");
-	printf("flags: %d \n", flags);
 	LOCK(&setNumMax);
 	if (numMax == 0){	UNLOCK(&setNumMax); return -5;}
 	UNLOCK(&setNumMax);
@@ -269,6 +242,7 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock)
 	return 0;
 }
 
+//	leggo un file dall'albero
 int readFile(nodo* root, char* name, msg_t* text, pid_t cLock)
 {
 	nodo* tmp;
@@ -315,9 +289,9 @@ void readsFile(nodo* root, int n, pid_t cLock, msg_l* buffer)
 	return;
 }
 
+//	scrivo sull'albero
 int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 {
-	printf("sono dentro la append\n");
 	nodo* find = NULL;
 	if ((find = findTreeFromName(root,name)) == NULL)	return -3;
 	else if (find->stato != 0 || (find->lucchetto == 0 && find->sLock != cLock))	return -2;
@@ -329,7 +303,7 @@ int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 		LOCK(&setMemMax);
 		memMax = memMax - strlen(find->testo);
 		UNLOCK(&setMemMax);
-		if (memMax <= 0)	{printf("sto cancellando....\n"); return -5;}
+		if (memMax <= 0)	{fprintf(stderr,"sto cancellando....\n"); return -5;}
 		addFrequenza(find->freq);
 	} 
 	return 0;

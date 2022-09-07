@@ -9,6 +9,9 @@
 int sockfd;
 int p = 0;
 
+/**
+ *	\ apre una connessione attraverso i parametri
+*/
 int openConnection(const char* sockname, int msec, const struct timespec abstime){
 	errno = 0;
 	int ris = 0;
@@ -37,8 +40,8 @@ int openConnection(const char* sockname, int msec, const struct timespec abstime
 }
 
 /**
- *	\
- *	\
+ *	\ chiude la connessione attraverso il sockname
+ *	\ chiudo i parametri di collegamento
 */
 int closeConnection(const char* sockname){
 	errno = 0;
@@ -61,24 +64,22 @@ int closeConnection(const char* sockname){
 		perror("ERROR: Messaggio non ricevuto dal server");
 		return -1;
 	}
-
+	// stampo i/il messaggio/i
 	if (p){
-		fprintf(stdout,"CloseConnection:\n");
+		fprintf(stdout,"CloseConnection\n");
 		stampaOp(ris);
 	}
-
 	// chiudo la connessione
 	close(sockfd);
 	// se il server risponde con "ok", chiusura' con successo
-	if(ris == OP_END){
-		printf("Chiusura' eseguita con successo\n");
-		return 0;
-	}
+	if(ris == OP_END)	return 0;
 	// errore di tipo risposta dal server
 	return -1;
 }
 
-
+/**
+ *	\ mando e ricevo dati al server sulla operazione della open
+*/
 int openFile(const char* pathname, int flags)
 {
 	msg_t* open = alloca(sizeof(msg_t));
@@ -108,9 +109,9 @@ int openFile(const char* pathname, int flags)
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
-
+	// stampo i/il messaggio/i
 	if (p){
-		fprintf(stdout,"Open File:\n");
+		fprintf(stdout,"Open File\n");
 		stampaOp(tmp.op);
 	}
 
@@ -123,10 +124,16 @@ int openFile(const char* pathname, int flags)
 	return 0;
 }
 
+/**
+  * \ trasforma un file in byte
+  * \ nome del file da trovare in memoria
+  * \ puntatore in cui verrà salvata la dimensione del file memorizzato
+  */
 char* readBytes(const char* name, long* filelen)
 {
 	FILE *file = NULL;
-	fprintf(stderr, "nome: %s\n", name);
+	// stampo i/il messaggio/i
+	if (p) fprintf(stderr, "nome: %s\n", name);
 	if ((file = fopen(name, "rb")) == NULL){
 		perror("ERRORE: APERTURA FILE");
 		fclose(file);
@@ -186,8 +193,8 @@ int writeBytes(const char* name, char* text, long size, const char* dirname)
 }
 
 /**
- *	\Legge tutto il contenuto del file dal server, ritornando un puntatore.
- *	\Ritorna 0 in caso di successo, -1 in caso di fallimento, errno.
+ *	\ Legge tutto il contenuto del file dal server, ritornando un puntatore.
+ *	\ Ritorna 0 in caso di successo, -1 in caso di fallimento, errno.
 */
 int readFile(const char* pathname, void** buf, size_t* size)
 {
@@ -218,9 +225,9 @@ int readFile(const char* pathname, void** buf, size_t* size)
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
-
+ 	// stampo i/il messaggio/i
 	if (p){
-		fprintf(stdout,"Read File:\n");
+		fprintf(stdout,"Read File\n");
 		stampaOp(tmp.op);
 	}
 	
@@ -233,6 +240,10 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	return 0;
 }
 
+/**
+ *	\ Legge tutto il contenuto di più file dal server, ritornando un puntatore.
+ *	\ Ritorna 0 in caso di successo, -1 in caso di fallimento, errno.
+*/
 int readNFiles(int N, const char* dirname){
 	msg_t* reads = alloca(sizeof(msg_t));
 	reads->op = 9;
@@ -269,11 +280,10 @@ int readNFiles(int N, const char* dirname){
 
 	return ret;
 }
-
       
 /**
- *	\
- *	\
+ *	\ La funzione di write attraverso i parametri di ingresso
+ *	\ e si scrive attraverso la cartella il file e caricato dal server
 */
 int writeFile(const char* pathname, const char* dirname)
 {
@@ -314,8 +324,9 @@ int writeFile(const char* pathname, const char* dirname)
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
+	// stampo i/il messaggio/i
 	if (p){
-		fprintf(stdout,"Write File:\n");
+		fprintf(stdout,"Write File\n");
 		stampaOp(tmp.op);
 	}
 
@@ -332,21 +343,57 @@ int writeFile(const char* pathname, const char* dirname)
 	return -1;
 }
 
-
-/**
- *	\
- *	\
-*/
 int appendToFile(const char* pathname, void* buf, size_t size, const char* dirname)
 {
+	msg_t* append = alloca(sizeof(msg_t));
+	append->op = 3;
+
+	errno = 0;
+
+	// copio il pathname
+	int nameLen = strlen(pathname) + 1;
+
+	// copiando append nel contenuto e nella dimensione del messaggio
+	strncpy(append->nome,pathname,nameLen);
+	append->nome[nameLen] = '\0';
+
+	// passo al processo pid
+	append->cLock = getpid();
+
+	//	mando il messaggio al server
+	if (writen(sockfd, append, sizeof(msg_t)) <= 0){
+		errno = -1;
+		perror("ERRORE: scrittura readFile");
+		return -1;
+	}
+
+	// ricevo il messaggio dal server
+	msg_t tmp;
+	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
+		errno = -1;
+		perror("ERRORE: lettura risposta readFile");
+	}
+	// stampo i/il messaggio/i
+	if (p){
+		fprintf(stdout,"Append File\n");
+		stampaOp(tmp.op);
+	}
+
+	if (tmp.op == OP_OK)
+	return 0;
 	
+	if (tmp.op == OP_LFU){
+		char *nome = strrchr(tmp.nome, '/');
+		nome++; 
+		writeBytes(nome,tmp.str,tmp.lStr,"./LFU");
+		appendToFile(pathname,buf,size,dirname);
+	}
+
+	return -1;
+
 	return 0;
 }
 
-/**
- *	\
- *	\
-*/
 int lockFile(const char* pathname)
 {
 	msg_t* lock = alloca(sizeof(msg_t));
@@ -375,22 +422,17 @@ int lockFile(const char* pathname)
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}
-
+	// stampo i/il messaggio/i
 	if (p){
-		fprintf(stdout,"Lcok File:\n");
+		fprintf(stdout,"Lcok File\n");
 		stampaOp(tmp.op);
 	}
 
-	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
+	if (tmp.op != OP_OK)	return -1;
 
-	printf("ok\n");
 	return 0;
 }
 
-/**
- *	\
- *	\
-*/
 int unlockFile(const char* pathname)
 {
 	msg_t* unlock = alloca(sizeof(msg_t));
@@ -419,22 +461,17 @@ int unlockFile(const char* pathname)
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}	
-
+	// stampo i/il messaggio/i
 	if (p){
-		fprintf(stdout,"Unlock File:\n");
+		fprintf(stdout,"Unlock File\n");
 		stampaOp(tmp.op);
 	}
 
-	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
+	if (tmp.op != OP_OK)	return -1;
 
-	printf("ok\n");
 	return 0;
 }
 
-/**
- *	\
- *	\
-*/
 int closeFile(const char* pathname)
 {
 	msg_t* close = alloca(sizeof(msg_t));
@@ -463,21 +500,17 @@ int closeFile(const char* pathname)
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}	
-
+	// stampo i/il messaggio/i
 	if (p){
-		fprintf(stdout,"Close File:\n");
+		fprintf(stdout,"Close File\n");
 		stampaOp(tmp.op);
 	}
 
-	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
-	printf("ok\n");
+	if (tmp.op != OP_OK)	return -1;
+
 	return 0;
 }
 
-/**
- *	\
- *	\
-*/
 int removeFile(const char* pathname)
 {
 	msg_t* remove = alloca(sizeof(msg_t));
@@ -504,17 +537,18 @@ int removeFile(const char* pathname)
 		errno = -1;
 		perror("ERRORE: lettura risposta lockFile");
 	}	
-
+	// stampo i/il messaggio/i
 	if (p){
-		fprintf(stdout,"Remove File:\n");
+		fprintf(stdout,"Remove File\n");
 		stampaOp(tmp.op);
 	}
 
-	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
-	printf("ok\n");
+	if (tmp.op != OP_OK)	return -1;
+
 	return 0;
 }
 
+//	setto il parametro p per la stampa a schermo
 void set_p()
 {
 	if (!p) p = 1;

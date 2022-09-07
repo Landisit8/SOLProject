@@ -1,12 +1,4 @@
 #define _POSIX_C_SOURCE 199309L
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <getopt.h>
-#include <time.h>
-#include <dirent.h>
-
 #include <API.h>
 #include <utils.h>
 #include <conn.h>
@@ -16,19 +8,6 @@
 
 
 char* SOCKET = NULL;
-/*
-int writeDir(const char* dirname,long* n){
-	if (chdir(dirname) == -1)	return 0;
-
-	DIR *d;
-
-	if ((d = opendir(".")) == NULL)	return -1;
-	else {
-		struct dir *file;
-		
-	}
-}
-*/
 
 void listaHelp(){
 	printf("Opzioni:\n\n");
@@ -49,23 +28,27 @@ void listaHelp(){
 	printf("-p: Abilita' le stampe in tutto il progetto.\n\n");
 }
 
+/**
+ *	\ Funzione che prende i valori inseriti dall'utente 
+ *	\ e decide l'operazione da fare
+*/
 int parsing (int n, char** valori){
 	struct timespec abstime;
 	int opt;
-	void* buf = NULL;
-	size_t sz;
 	int r;
+	int p;
+	size_t sz;
+	long num = 0;
+	long nume = -1;
+	long sleeptime = 0;
 	char* token;
 	char* file;
 	char *tmp = NULL;
-	long num = 0;
-	long nume = -1;
 	char* nome;
-	long sleeptime = 0;
-	int p;
 	char* dirname;
 	char* cartellaLettura = NULL;
 	char* cartellaEspulsi = NULL;
+	void* buf = NULL;
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1){
 		switch(opt) 
@@ -171,6 +154,7 @@ int parsing (int n, char** valori){
 					if (r == -1){
 					errno = ECONNREFUSED;
 					perror("readNFiles");
+					}
 				}
 			break;
 			case 'd':
