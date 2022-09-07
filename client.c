@@ -64,6 +64,8 @@ int parsing (int n, char** valori){
 	long sleeptime = 0;
 	int p;
 	char* dirname;
+	char* cartellaLettura = NULL;
+	char* cartellaEspulsi = NULL;
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1){
 		switch(opt) 
@@ -118,8 +120,11 @@ int parsing (int n, char** valori){
 					file = alloca(strlen(token) + 1);
 					strncpy(file, token, strlen(token) + 1);
 					file[strlen(token) + 1] = '\0';
-					r = writeFile(file, NULL);
+					if (cartellaEspulsi)
+						r = writeFile(file, cartellaEspulsi);
 					//printf("valore di r: %d\n", r);
+					else
+						r = writeFile(file, NULL);
 					if(r == -1)
 					{
 						perror("ERROR: write to file");
@@ -128,6 +133,9 @@ int parsing (int n, char** valori){
 				}
 			break;
 			case 'D':
+				cartellaEspulsi = alloca(strlen(optarg) + 1);
+				strncpy(cartellaEspulsi,optarg,strlen(optarg) +1);
+				if (p) fprintf(stdout,"I file espulsi vengono salvati in %s", optarg);
 
 			break;
 			case 'r':
@@ -139,7 +147,7 @@ int parsing (int n, char** valori){
 				if (r == 0){	//da aggiungere il controllo se la cartella è NULL
 					nome = strrchr(optarg, '/');
 					nome++; 
-					writeBytes(nome,buf,sz,"./read");
+					if (cartellaLettura) writeBytes(nome,buf,sz,"./read");
 				}
 			break;
 			case 'R':
@@ -152,14 +160,23 @@ int parsing (int n, char** valori){
 				//	se tmp esiste:
 				if (tmp) isNumber(tmp, &num);
 
-				r = readNFiles(num, "./read");
-				if (r == -1){
+				if (cartellaLettura){
+					r = readNFiles(num, cartellaLettura);
+					if (r == -1){
+					errno = ECONNREFUSED;
+					perror("readNFiles");
+				}
+				} else {
+					r = readNFiles(num, NULL);
+					if (r == -1){
 					errno = ECONNREFUSED;
 					perror("readNFiles");
 				}
 			break;
 			case 'd':
-			
+				cartellaLettura = alloca(strlen(optarg) + 1);
+				strncpy(cartellaLettura, optarg, strlen(optarg) + 1);
+				if (p)	fprintf(stdout,"I file letti vengono salvati in %s", cartellaLettura);
 			break;
 			case 't':
 				if((isNumber(optarg, &sleeptime)) == 1)
