@@ -44,11 +44,6 @@ sigset_t signal_mask;
 nodo pRoot = {0, "pRoot", "abcd", 1, 1, 0, NULL, NULL,};
 pthread_mutex_t setTree = PTHREAD_MUTEX_INITIALIZER;
 
-void cleanup()
-{
-	unlink(sktname);
-}
-
 // ritorno l'indice massimo tra i descrittori attivi
 int updatemax(fd_set set, int fdmax)
 {
@@ -532,22 +527,13 @@ int main(int argc, char *argv[])
 
 	fprintf(stdout, "Numero di processo del server: %d\n", getpid());
 	//	controllo se file config non esiste
-	if ((sktname = malloc(MAXS * sizeof(char))) == NULL)
-	{
-
-		perror("malloc");
-		free(sktname);
-		return -1;
-	}
+	sktname = alloca(MAXS);
 
 	fileLogName = alloca(MAXS);
 
 	parsing(&thrw, &memMax, &sktname, &numMax, &fileLogName);
 
 	fprintf(stdout,"nthread:%ld - memoria:%ld - socketname:%s - nfile massimi:%ld\n", thrw, memMax, sktname, numMax);
-
-	cleanup();
-	atexit(cleanup);
 	
 	fileLogCreate();
 

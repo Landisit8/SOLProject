@@ -9,12 +9,12 @@ extern pthread_mutex_t setNumMax;
 nodo* newNode (int freq, char* nome, char* testo, int stato, int lock)
 {
 	nodo* new;
-	if ((new = (nodo*) malloc(sizeof(nodo))) == NULL)	return NULL;	//	perror
+	new = alloca(sizeof(nodo));
 	new->freq = freq;
-	if ((new->nome = malloc(strlen(nome)* sizeof(char)))  == NULL)	return NULL;	//	perror
-	strcpy(new->nome, nome);
-	if ((new->testo = malloc(strlen(testo)* sizeof(char))) == NULL)	return NULL;	//	perror
-	strcpy(new->testo, testo);
+	new->nome = alloca(strlen(nome) + 1);
+	strncpy(new->nome, nome, (strlen(nome)) + 1);
+	new->testo = alloca(strlen(testo) + 1);
+	strncpy(new->testo, testo, (strlen(testo)) + 1);
 	new->stato = stato;
 	new->lucchetto = lock;
 	new->left = NULL;
@@ -246,13 +246,14 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock)
 int readFile(nodo* root, char* name, msg_t* text, pid_t cLock)
 {
 	nodo* tmp;
+	text = alloca(sizeof(msg_t));
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	if ((tmp = findTreeFromName(root,name)) == NULL)	return -3;
 	else if (tmp->stato != 0 || (tmp->lucchetto == 0 && tmp->sLock != cLock))	return -2;
 	else addFrequenza(tmp->freq);
-	strncpy(text->str,tmp->testo, strlen(tmp->testo));
+	strncpy(text->str,tmp->testo, (strlen(tmp->testo)) + 1);
 	text->lStr = strlen(tmp->testo);
-	strncpy(text->nome,tmp->nome, strlen(tmp->nome));
+	strncpy(text->nome,tmp->nome, (strlen(tmp->nome)) + 1);
 	text->lNome = strlen(tmp->nome);
 	return 0;
 }
@@ -298,8 +299,8 @@ int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 	else
 	{
 		int somma = strlen(find->testo) + strlen(text);
-		CHECK_EQ_EXIT(find->testo = realloc(find->testo, somma+1), NULL, ERROR: malloc);
-		strncat(find->testo, text, somma);
+		CHECK_EQ_EXIT(find->testo = (char*)realloc(find->testo, somma + 2), NULL, ERROR: malloc);
+		strncat(find->testo, text, strlen(text));
 		LOCK(&setMemMax);
 		memMax = memMax - strlen(find->testo);
 		UNLOCK(&setMemMax);
