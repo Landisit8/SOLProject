@@ -141,4 +141,10 @@ int writeFile(nodo* root, char* name, char* text, pid_t cLock);
  */
 void print (nodo* n);
 
+/** 
+ * \ finito le operazioni, cancello l'albero
+  * \return l'albero cancellato
+*/
+void cleanTree (nodo* root);
+
 #endif // 

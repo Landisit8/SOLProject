@@ -41,7 +41,7 @@ pthread_t signal_handler;
 
 sigset_t signal_mask;
 
-nodo pRoot = {0, "pRoot", "abcd", 1, 1, 0, NULL, NULL,};
+nodo* pRoot;
 pthread_mutex_t setTree = PTHREAD_MUTEX_INITIALIZER;
 
 // ritorno l'indice massimo tra i descrittori attivi
@@ -74,12 +74,7 @@ int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileL
 		return -1;
 	}
 	//	alloco un buffer in memoria con un MAX piu' i controlli dedicati
-	if ((buffer = malloc(MAXS * sizeof(char))) == NULL)
-	{
-		perror("Error malloc");
-		free(buffer);
-		return -1;
-	}
+	buffer = alloca(MAXS * sizeof(char));
 
 	while (fgets(buffer, MAXS, fd) != NULL)
 	{
@@ -100,12 +95,7 @@ int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileL
 			return -1;
 		}
 		char *string;
-		if ((string = malloc(MAXS * sizeof(char))) == NULL)
-		{
-			perror("Error malloc");
-			free(string);
-			return -1;
-		}
+		string = alloca(MAXS * sizeof(char));
 		char *token = strtok(buffer, "=");
 		token = strtok(NULL, "=");
 		strncpy(string, token, MAXS);
@@ -137,8 +127,11 @@ int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileL
 			fprintf(stderr, "Error in tokenizer");
 			break;
 		}
+		free(string);
 	}
 	*memMax = *memMax * 1048576; //	conversione da megabyte in byte
+	free(buffer);
+	fclose(fd);
 	return 0;
 }
 
@@ -205,7 +198,7 @@ int operation(int fd_io, msg_t msg)
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = openFile(&pRoot, msg.nome, msg.flags, msg.cLock);
+		tmp = openFile(pRoot, msg.nome, msg.flags, msg.cLock);
 		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
@@ -217,7 +210,7 @@ int operation(int fd_io, msg_t msg)
 		UNLOCK(&log_lock);
 		fflush(log_file);
 		LOCK(&setTree);
-		tmp = readFile(&pRoot, msg.nome, &re, msg.cLock);
+		tmp = readFile(pRoot, msg.nome, &re, msg.cLock);
 		UNLOCK(&setTree);
 		message(tmp, &re);
 		if (writen(fd_io, &re, sizeof(msg_t)) <= 0)
@@ -237,7 +230,7 @@ int operation(int fd_io, msg_t msg)
 		buffer = alloca(sizeof(msg_l));
 		msg_lStart(buffer);
 		LOCK(&setTree);
-		readsFile(&pRoot, msg.flags, msg.cLock, buffer);
+		readsFile(pRoot, msg.flags, msg.cLock, buffer);
 		UNLOCK(&setTree);
 		if (buffer->lung == 0){
 			res->op = 0;
@@ -267,7 +260,7 @@ int operation(int fd_io, msg_t msg)
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = writeFile(&pRoot, msg.nome, msg.str, msg.cLock);
+		tmp = writeFile(pRoot, msg.nome, msg.str, msg.cLock);
 		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
@@ -278,7 +271,7 @@ int operation(int fd_io, msg_t msg)
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = appendToFile(&pRoot, msg.nome, msg.str, msg.cLock);
+		tmp = appendToFile(pRoot, msg.nome, msg.str, msg.cLock);
 		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
@@ -289,7 +282,7 @@ int operation(int fd_io, msg_t msg)
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = changeStatus(&pRoot, msg.nome, 1, msg.cLock);
+		tmp = changeStatus(pRoot, msg.nome, 1, msg.cLock);
 		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
@@ -300,7 +293,7 @@ int operation(int fd_io, msg_t msg)
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = fileRemove(&pRoot,msg.nome, msg.cLock);
+		tmp = fileRemove(pRoot,msg.nome, msg.cLock);
 		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
@@ -311,7 +304,7 @@ int operation(int fd_io, msg_t msg)
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = changeLock(&pRoot, msg.nome, 0, msg.cLock);
+		tmp = changeLock(pRoot, msg.nome, 0, msg.cLock);
 		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
@@ -322,7 +315,7 @@ int operation(int fd_io, msg_t msg)
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = changeLock(&pRoot, msg.nome, 1, msg.cLock);
+		tmp = changeLock(pRoot, msg.nome, 1, msg.cLock);
 		UNLOCK(&setTree);
 		message(tmp, &msg);
 		operation(fd_io, msg);
@@ -338,7 +331,7 @@ int operation(int fd_io, msg_t msg)
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = lfuRemove(&pRoot, &re);
+		tmp = lfuRemove(pRoot, &re);
 		UNLOCK(&setTree);
 		LOCK(&setCont);
 		cont++;
@@ -507,7 +500,6 @@ void* signalhandler(void*arg)
 
 		//chiudo il server dopo aver sentito tutte le richieste
 		if (segnale == SIGHUP){
-			fprintf(stderr, " SIGHUP\n");
 			//segnalo ai worker
 			sig_chiusura =1;
 			//sblocco la lista
@@ -517,13 +509,13 @@ void* signalhandler(void*arg)
 				pthread_join(thr[i], NULL);
 		}
 	}
-	fprintf(stderr, "Uscita signal");
+	fprintf(stderr, "Uscita signal\n");
 	pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[])
 {
-	long thrw;
+	pRoot = newNode(0, "pRoot", "abcd", 1, 1);
 
 	fprintf(stdout, "Numero di processo del server: %d\n", getpid());
 	//	controllo se file config non esiste
@@ -541,7 +533,7 @@ int main(int argc, char *argv[])
 
 	sigset_t oldmask;
 
-	SYSCALL_EXIT("sigemptyset", r, sigemptyset(&signal_mask), "ERRORE: sigemptyset", "");
+	SYSCALL_EXIT("sigemptyset", r, sigemptyset(&signal_mask), "ERRORE: sigemptysignal_handlerset", "");
 	SYSCALL_EXIT("sigaddset", r, sigaddset(&signal_mask, SIGHUP), "ERRORE: sigaddset", "");
 	SYSCALL_EXIT("sigaddset", r, sigaddset(&signal_mask, SIGINT), "ERRORE: sigaddset", "");
 	SYSCALL_EXIT("sigaddset", r, sigaddset(&signal_mask, SIGQUIT), "ERRORE: sigaddset", "");
@@ -662,10 +654,15 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	pthread_join(signal_handler, NULL);
 	close(fd);
 	unlink(sktname);
 	free(sktname);
-	unlink(fileLogName);
+	fclose(log_file);
 	free(fileLogName);
-	return 0;
+	free(thr);
+	msgClean(attesa);
+	cleanTree(pRoot);
+	fprintf(stdout, "Memoria Cache cancellata\n");
+	pthread_exit(NULL);
 }

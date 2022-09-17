@@ -297,6 +297,24 @@ static inline void msgPopReturn(msg_l *list, msg_t **toReturn)
 
   return;
 }
+
+//  cancello la lista
+static inline void msgClean(msg_l* list)
+{
+    msg_t* current = list->testa;
+    msg_t* next;
+
+    while (current != NULL)
+    {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+    list->testa = NULL;
+    list->coda = NULL;
+    free(list);
+    return;
+}
 /**
  * Stampa della risposta dal server
  */

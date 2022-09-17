@@ -246,7 +246,6 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock)
 int readFile(nodo* root, char* name, msg_t* text, pid_t cLock)
 {
 	nodo* tmp;
-	text = alloca(sizeof(msg_t));
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	if ((tmp = findTreeFromName(root,name)) == NULL)	return -3;
 	else if (tmp->stato != 0 || (tmp->lucchetto == 0 && tmp->sLock != cLock))	return -2;
@@ -299,7 +298,7 @@ int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 	else
 	{
 		int somma = strlen(find->testo) + strlen(text);
-		CHECK_EQ_EXIT(find->testo = (char*)realloc(find->testo, somma + 2), NULL, ERROR: malloc);
+		CHECK_EQ_EXIT(find->testo = realloc(find->testo, somma + 2), NULL, ERROR: malloc);
 		strncat(find->testo, text, strlen(text));
 		LOCK(&setMemMax);
 		memMax = memMax - strlen(find->testo);
@@ -390,4 +389,18 @@ int changeLock(nodo* root, char* name, int lb, pid_t cLock)
 
 	addFrequenza(find->freq);
 	return 0;
+}
+
+void cleanTree (nodo* root)
+{
+	if (root == NULL)	return;
+
+	//	ciclo nell'albero
+	cleanTree(root->right);
+	cleanTree(root->left);
+
+	// cancello
+	free(root->nome);
+	free(root->testo);
+	free(root);
 }
