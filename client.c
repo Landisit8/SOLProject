@@ -6,8 +6,94 @@
 
 #define MAX 2048
 
-
+char* cartellaLettura = NULL;
+char* cartellaEspulsi = NULL;
 char* SOCKET = NULL;
+
+/**
+ * \ Guarda se sei dentro la directory corrente
+ */
+int isdot (const char dir[]){
+	int l = strlen(dir);
+	if (l > 0 && dir[l - 1] == '.') return 1;
+	return 0;
+}
+
+/**
+ * \ ottiene il pathname assoluto di un file
+ */
+char* cwd(){
+	char* buf = alloca(MAX);
+
+	if (getcwd(buf, MAX) == NULL){
+		perror("Errore durante getcwd");
+		free(buf);
+		return NULL;
+	}
+
+	return buf;
+}
+
+/**
+ * \
+ * 
+ */
+// return -1: Errore
+// return 0: non è risucito ad entrare nella cartella
+// return 1: successo
+int writeDir(const char* dirname,long* nume){
+		if (chdir(dirname) == -1){
+			// quando ho finito le cartelle da ciclare
+			return 0;
+		}
+
+		DIR *dir;
+		if ((dir = opendir(".")) == NULL){
+			// errore nell'entrare nella cartella
+			return -1;
+		} else {
+			struct dirent *file;
+
+			while ((errno = 0, file = readdir(dir)) != NULL) {
+				struct stat statb;
+
+				// prendo le statistiche del file/cartelle
+				if (stat(file->d_name, &statb) == -1){
+					print_error("ERRORE stat %s\n", file->d_name);
+					return -1;
+				}
+
+				// se il file è una cartella
+				if (S_ISDIR(statb.st_mode)) {
+					// controllo di non essere nella directory corrente
+					if (!isdot(file->d_name)){
+						// chiamata ricorsiva
+						if (writeDir(file->d_name, nume) != 0) {
+							// Torno indietro alla directory precedente
+							if (chdir("..") == -1){
+								fprintf(stderr,"impossibile tornare dalla directory precedente");
+								return -1;
+							}
+						}
+					}
+				} else {
+					if (*nume == 0) return 1;
+					char* buf = cwd();
+					buf = strncat(buf,"/",2);
+					buf = strncat(buf, file->d_name, strlen(file->d_name));
+					
+					// chiamo la write file per vedere se è andato tutto bene
+					if (writeFile(buf,cartellaEspulsi) == 0)	*nume = *nume - 1;
+					free(buf);
+				}
+
+			}
+			//	errore
+			if (errno != 0)	perror("readdir");
+			closedir(dir);
+		}
+		return 1;
+}
 
 void listaHelp(){
 	printf("Opzioni:\n\n");
@@ -46,8 +132,6 @@ int parsing (int n, char** valori){
 	char *tmp = NULL;
 	char* nome;
 	char* dirname;
-	char* cartellaLettura = NULL;
-	char* cartellaEspulsi = NULL;
 	void* buf = NULL;
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1){
@@ -81,19 +165,18 @@ int parsing (int n, char** valori){
 							strncpy(dirname, token, strlen(token));
 							num++;;
 						}
-						if (num == 1) isNumber(token, &num);
+						if (num == 1) isNumber(token, &nume);
 						token = strtok(NULL,",");
 					}
 					if (p){
-						if (n>0) fprintf(stdout,"Scrivo %ld file ", nume);
+						if (nume>0) fprintf(stdout,"Scrivo %ld file ", nume);
 						else fprintf(stdout, "Scrivo tutti i file ");
 						fprintf(stdout, "da questa cartella %s\n", dirname);
 					}
 
-					if (nume == 0)	n = -1;
+					if (nume == 0)	nume = -1;
 
-					//if (writeDir(dirname, &nume) < 0)
-					return -1;		
+					if (writeDir(dirname, &nume) < 0)	return -1;	
 			break;
 			case 'W':
 				token = strtok(optarg,",");
@@ -169,7 +252,6 @@ int parsing (int n, char** valori){
 					return EXIT_FAILURE;
 				}
 				if(p) fprintf(stdout, "Timeout tra le richieste impostato su %ld\n\n", sleeptime);
-
 			break;
 			case 'l':
 				r = lockFile(optarg);
@@ -206,7 +288,7 @@ int parsing (int n, char** valori){
 				listaHelp();
 			break;
 		}
-	sleep(sleeptime*1000);
+	sleep(sleeptime);
 	}
 	return 0;
 }

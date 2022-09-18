@@ -148,7 +148,7 @@ nodo* searchLeaf (nodo* n)
 //	cerca il valore minimo nell'albero, un'altra ricerca per trovare il nome del nodo
 //	cosi restituisce il nodo effettevivo, infine si cerca una foglia qualsisi e con le considerazioni della funzione searchLeaf
 //	si scambia con il nodo con la frequenza minima trovata con la foglia e si cancella la foglia 
-int lfuRemove(nodo* n, msg_t* text)
+int lfuRemove(nodo* n, msg_t** text)
 {
 	if (n == NULL)	return -3;
 	if (n->left == NULL && n->right == NULL)	return -1;
@@ -168,10 +168,11 @@ int lfuRemove(nodo* n, msg_t* text)
 	if (!(find = findTreeFromName(n,name)))	return -3;
 
 	//carico gli elementi in "text" per caricarlo nella cartella apposita
-	strncpy(text->str,find->testo, strlen(find->testo));
-	text->lStr = strlen(find->testo);
-	strncpy(text->nome,find->nome, strlen(find->nome));
-	text->lNome = strlen(find->nome);
+	*text = alloca(sizeof(msg_t));
+	strncpy((*text)->str,find->testo, strlen(find->testo));
+	(*text)->lStr = strlen(find->testo);
+	strncpy((*text)->nome,find->nome, strlen(find->nome));
+	(*text)->lNome = strlen(find->nome);
 
 	//	cerco una foglia generica
 	if (!(leaf = searchLeaf(n)))	return -3;
@@ -243,17 +244,18 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock)
 }
 
 //	leggo un file dall'albero
-int readFile(nodo* root, char* name, msg_t* text, pid_t cLock)
+int readFile(nodo* root, char* name, msg_t** text, pid_t cLock)
 {
 	nodo* tmp;
+	*text = alloca(sizeof(msg_t));
 	if (strcmp(name, "pRoot") == 0)	return -1;
 	if ((tmp = findTreeFromName(root,name)) == NULL)	return -3;
 	else if (tmp->stato != 0 || (tmp->lucchetto == 0 && tmp->sLock != cLock))	return -2;
 	else addFrequenza(tmp->freq);
-	strncpy(text->str,tmp->testo, (strlen(tmp->testo)) + 1);
-	text->lStr = strlen(tmp->testo);
-	strncpy(text->nome,tmp->nome, (strlen(tmp->nome)) + 1);
-	text->lNome = strlen(tmp->nome);
+	strncpy((*text)->str,tmp->testo, (strlen(tmp->testo)) + 1);
+	(*text)->lStr= strlen(tmp->testo);
+	strncpy((*text)->nome,tmp->nome, (strlen(tmp->nome)) + 1);
+	(*text)->lNome = strlen(tmp->nome);
 	return 0;
 }
 

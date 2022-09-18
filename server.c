@@ -184,53 +184,55 @@ void message(int back, msg_t *msg)
 }
 
 //	Corpo del server, divide ogni operazione che può effettuare il server
-int operation(int fd_io, msg_t msg)
+int operation(int fd_io, msg_t *msg)
 {
 	int tmp;
-	msg_t re;	//ATTENZIONE
+	msg_t* re = NULL;
 	msg_t* res;
 	msg_l* buffer = NULL;
-	switch (msg.op)
+	switch (msg->op)
 	{
 	case OPEN_OP:
 		LOCK(&log_lock);
-		fprintf(log_file, "Open del file %s\n", msg.nome);	// LogFile
+		fprintf(log_file, "Open del file %s\n", msg->nome);	// LogFile
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = openFile(pRoot, msg.nome, msg.flags, msg.cLock);
+		tmp = openFile(pRoot, msg->nome, msg->flags, msg->cLock);
 		UNLOCK(&setTree);
-		message(tmp, &msg);
+		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
 	case READ_OP:
 	//	caso particolare per mandare anche il testo insieme alla risposta
 		LOCK(&log_lock);
-		fprintf(log_file, "Read del file %s\n", msg.nome);	// LogFile
+		fprintf(log_file, "Read del file %s\n", msg->nome);	// LogFile
 		UNLOCK(&log_lock);
 		fflush(log_file);
 		LOCK(&setTree);
-		tmp = readFile(pRoot, msg.nome, &re, msg.cLock);
+		tmp = readFile(pRoot, msg->nome, &re, msg->cLock);
 		UNLOCK(&setTree);
-		message(tmp, &re);
-		if (writen(fd_io, &re, sizeof(msg_t)) <= 0)
+		fflush(stdout);
+		message(tmp, re);
+		if (writen(fd_io, re, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
 			return -1;
 		}
+		free(re);
 		break;
 	case READS_OP:
 	//	caso particolare per mandare anche il testo insieme alla risposta
 		LOCK(&log_lock);
-		fprintf(log_file, "Reads del file %s\n", msg.nome);	// LogFile
+		fprintf(log_file, "Reads del file %s\n", msg->nome);	// LogFile
 		fflush(log_file);
 		UNLOCK(&log_lock);
-		if (msg.flags == 0)	msg.flags = -1;
+		if (msg->flags == 0)	msg->flags = -1;
 		buffer = alloca(sizeof(msg_l));
 		msg_lStart(buffer);
 		LOCK(&setTree);
-		readsFile(pRoot, msg.flags, msg.cLock, buffer);
+		readsFile(pRoot, msg->flags, msg->cLock, buffer);
 		UNLOCK(&setTree);
 		if (buffer->lung == 0){
 			res->op = 0;
@@ -256,78 +258,78 @@ int operation(int fd_io, msg_t msg)
 		break;
 	case WRITE_OP:
 		LOCK(&log_lock);
-		fprintf(log_file, "Write del file %s\n", msg.nome);	// LogFile
+		fprintf(log_file, "Write del file %s\n", msg->nome);	// LogFile
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = writeFile(pRoot, msg.nome, msg.str, msg.cLock);
+		tmp = writeFile(pRoot, msg->nome, msg->str, msg->cLock);
 		UNLOCK(&setTree);
-		message(tmp, &msg);
+		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
 	case APPEND_OP:
 		LOCK(&log_lock);
-		fprintf(log_file, "Append del file %s\n", msg.nome);	// LogFile
+		fprintf(log_file, "Append del file %s\n", msg->nome);	// LogFile
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = appendToFile(pRoot, msg.nome, msg.str, msg.cLock);
+		tmp = appendToFile(pRoot, msg->nome, msg->str, msg->cLock);
 		UNLOCK(&setTree);
-		message(tmp, &msg);
+		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
 	case CLOSE_OP:
 		LOCK(&log_lock);
-		fprintf(log_file, "Close del file %s\n", msg.nome);	// LogFile
+		fprintf(log_file, "Close del file %s\n", msg->nome);	// LogFile
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = changeStatus(pRoot, msg.nome, 1, msg.cLock);
+		tmp = changeStatus(pRoot, msg->nome, 1, msg->cLock);
 		UNLOCK(&setTree);
-		message(tmp, &msg);
+		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
 	case REMOVE_OP:
 		LOCK(&log_lock);
-		fprintf(log_file, "Remove del file %s\n", msg.nome);	// LogFile
+		fprintf(log_file, "Remove del file %s\n", msg->nome);	// LogFile
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = fileRemove(pRoot,msg.nome, msg.cLock);
+		tmp = fileRemove(pRoot,msg->nome, msg->cLock);
 		UNLOCK(&setTree);
-		message(tmp, &msg);
+		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
 	case LOCK_OP:
 		LOCK(&log_lock);
-		fprintf(log_file, "Lock del file %s\n", msg.nome);	// LogFile
+		fprintf(log_file, "Lock del file %s\n", msg->nome);	// LogFile
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = changeLock(pRoot, msg.nome, 0, msg.cLock);
+		tmp = changeLock(pRoot, msg->nome, 0, msg->cLock);
 		UNLOCK(&setTree);
-		message(tmp, &msg);
+		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
 	case UNLOCK_OP:
 		LOCK(&log_lock);
-		fprintf(log_file, "Unlock del file %s\n", msg.nome);	// LogFile
+		fprintf(log_file, "Unlock del file %s\n", msg->nome);	// LogFile
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
-		tmp = changeLock(pRoot, msg.nome, 1, msg.cLock);
+		tmp = changeLock(pRoot, msg->nome, 1, msg->cLock);
 		UNLOCK(&setTree);
-		message(tmp, &msg);
+		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
 	case END_OP:
-		message(-4, &msg);
+		message(-4, msg);
 		operation(fd_io, msg);
 		break;
 	// caso della politica di cancellamento
 	case OP_LFU:
 		LOCK(&log_lock);
-		fprintf(log_file, "LFU per il file %s\n", msg.nome);	// LogFile
+		fprintf(log_file, "LFU per il file %s\n", msg->nome);	// LogFile
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		LOCK(&setTree);
@@ -339,24 +341,25 @@ int operation(int fd_io, msg_t msg)
 		LOCK(&setNumMax);
 		numMax++;
 		UNLOCK(&setNumMax);
-		re.op = OP_LFU;
+		re->op = OP_LFU;
 		if (tmp != 0){
-			message(tmp,&msg);
+			message(tmp,msg);
 			operation(fd_io, msg);
 		}
 		else{
-			if (writen(fd_io, &re, sizeof(msg_t)) <= 0)
+			if (writen(fd_io, re, sizeof(msg_t)) <= 0)
 			{
 				errno = -1;
 				perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
 				return -1;
 			}
 		}
+		free(re);
 		break;
 	//	Le risposte che si possono mandare
 	case OP_OK:
 		//	da cambiare il ritorno del messaggio, da op a msg x tutti
-		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
+		if (writen(fd_io, msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE10: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -364,7 +367,7 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case OP_FOK:
-		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
+		if (writen(fd_io, msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE11: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -372,7 +375,7 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case OP_BLOCK:
-		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
+		if (writen(fd_io, msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE12: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -381,7 +384,7 @@ int operation(int fd_io, msg_t msg)
 
 		break;
 	case OP_FFL_SUCH:
-		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
+		if (writen(fd_io, msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE13: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -389,7 +392,7 @@ int operation(int fd_io, msg_t msg)
 		}
 		break;
 	case OP_MSG_SIZE:
-		if (writen(fd_io, &msg, sizeof(msg_t)) <= 0)
+		if (writen(fd_io, msg, sizeof(msg_t)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE14: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -400,7 +403,7 @@ int operation(int fd_io, msg_t msg)
 		fprintf(log_file, "Chiusurà al client %d\n", fd_io);	// LogFile
 		fflush(log_file);
 		fflush(stderr);
-		if (writen(fd_io, &msg.op, sizeof(ops)) <= 0)
+		if (writen(fd_io, &(msg->op), sizeof(ops)) <= 0)
 		{
 			errno = -1;
 			perror("ERRORE15: NON STO MANDANDO LA RISPOSTA AL CLIENT");
@@ -441,7 +444,7 @@ void *readValue(void *arg)
 
 			UNLOCK(&richiesta);
 
-			operation(msg->fd_c, *msg);
+			operation(msg->fd_c, msg);
 
 		if (msg->op != 8)
 			{

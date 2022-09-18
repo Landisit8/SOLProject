@@ -107,7 +107,7 @@ int openFile(const char* pathname, int flags)
 	msg_t tmp;
 	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
-		perror("ERRORE: lettura risposta readFile");
+		perror("ERRORE: lettura risposta openFile");
 	}
 	// stampo i/il messaggio/i
 	if (p){
@@ -220,22 +220,22 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	}
 
 	//	ricevo il messaggio dal server
-	msg_t tmp;
-	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
+	msg_t* tmp = alloca(sizeof(msg_t));
+	if (readn(sockfd, tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta readFile");
 	}
  	// stampo i/il messaggio/i
 	if (p){
 		fprintf(stdout,"Read File\n");
-		stampaOp(tmp.op);
+		stampaOp(tmp->op);
 	}
 	
-	if (tmp.op != OP_OK){printf("E' sbagliato\n");	return -1;}
+	if (tmp->op != OP_OK)	return -1;
 
-	*size = tmp.lStr;
+	*size = tmp->lStr;
 	char *tmp_buf = alloca((*size));
-	strncpy(tmp_buf, tmp.str, tmp.lStr);
+	strncpy(tmp_buf, tmp->str, tmp->lStr);
 	*buf = (void*)tmp_buf;
 	return 0;
 }
@@ -258,7 +258,7 @@ int readNFiles(int N, const char* dirname){
 	//	mando il messaggio al server
 	if (writen(sockfd, reads, sizeof(msg_t)) <= 0){
 		errno = -1;
-		perror("ERRORE: scrittura readFile");
+		perror("ERRORE: scrittura readsFile");
 		return -1;
 	}
 	msg_t tmp;
@@ -266,7 +266,7 @@ int readNFiles(int N, const char* dirname){
 		//	ricevo il messaggio dal server
 		if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
-		perror("ERRORE: lettura risposta readFile");
+		perror("ERRORE: lettura risposta readsFile");
 		}
 		if (tmp.flags == 0)	return -1;
 		if (tmpo == 0){
@@ -319,24 +319,24 @@ int writeFile(const char* pathname, const char* dirname)
 	}
 
 	//	ricevo il messaggio dal server
-	msg_t tmp;
-	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
+	msg_t* tmp = alloca(sizeof(msg_t));
+	if (readn(sockfd, tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
-		perror("ERRORE: lettura risposta readFile");
+		perror("ERRORE: lettura risposta writeFile");
 	}
 	// stampo i/il messaggio/i
 	if (p){
 		fprintf(stdout,"Write File\n");
-		stampaOp(tmp.op);
+		stampaOp(tmp->op);
 	}
 
-	if (tmp.op == OP_OK)
+	if (tmp->op == OP_OK)
 	return 0;
 	
-	if (tmp.op == OP_LFU){
-		char *nome = strrchr(tmp.nome, '/');
+	if (tmp->op == OP_LFU){
+		char *nome = strrchr(tmp->nome, '/');
 		nome++; 
-		writeBytes(nome,tmp.str,tmp.lStr,"./LFU");
+		writeBytes(nome,tmp->str,tmp->lStr,"./LFU");
 		writeFile(pathname,dirname);
 	}
 
@@ -371,7 +371,7 @@ int appendToFile(const char* pathname, void* buf, size_t size, const char* dirna
 	msg_t tmp;
 	if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
-		perror("ERRORE: lettura risposta readFile");
+		perror("ERRORE: lettura risposta appendFile");
 	}
 	// stampo i/il messaggio/i
 	if (p){

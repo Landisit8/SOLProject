@@ -71,7 +71,7 @@ nodo* searchLeaf (nodo* n);
  * \si scambia con il nodo con la frequenza minima trovata con la foglia e si cancella la foglia 
  * \return n ok  NULL non esiste l'albero   
 */
-int lfuRemove(nodo* n, msg_t* text);
+int lfuRemove(nodo* n, msg_t** text);
 
 /** 
  * \cerca il nome nel nodo poi si cerca una foglia qualsisi e con le considerazioni della funzione searchLeaf
@@ -114,7 +114,7 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock);
  * \ copio l'elemento e lo salvo
  * \return 0 se andrà tutto bene, negativo altrimenti
 */
-int readFile(nodo* root, char* name, msg_t* text, pid_t cLock);
+int readFile(nodo* root, char* name, msg_t** text, pid_t cLock);
 
 /** 
  * \ se supero tutti i controlli
