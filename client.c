@@ -201,7 +201,7 @@ int parsing (int n, char** valori){
 			case 'D':
 				cartellaEspulsi = alloca(strlen(optarg) + 1);
 				strncpy(cartellaEspulsi,optarg,strlen(optarg) +1);
-				if (p) fprintf(stdout,"I file espulsi vengono salvati in %s", optarg);
+				if (p) fprintf(stdout,"I file espulsi vengono salvati in %s\n", optarg);
 
 			break;
 			case 'r':
@@ -243,7 +243,7 @@ int parsing (int n, char** valori){
 			case 'd':
 				cartellaLettura = alloca(strlen(optarg) + 1);
 				strncpy(cartellaLettura, optarg, strlen(optarg) + 1);
-				if (p)	fprintf(stdout,"I file letti vengono salvati in %s", cartellaLettura);
+				if (p)	fprintf(stdout,"I file letti vengono salvati in %s\n", cartellaLettura);
 			break;
 			case 't':
 				if((isNumber(optarg, &sleeptime)) == 1)

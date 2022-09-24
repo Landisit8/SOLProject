@@ -10,6 +10,7 @@
 
 //	variabili globali
 char *sktname = NULL;
+char *politica = NULL;
 int fdmax;
 // variabili per LOCK & UNLOCK
 long memMax;
@@ -19,8 +20,18 @@ pthread_mutex_t setNumMax = PTHREAD_MUTEX_INITIALIZER;
 long thrw;
 fd_set set;
 pthread_mutex_t setLock = PTHREAD_MUTEX_INITIALIZER;
-int cont = 0;
-pthread_mutex_t setCont = PTHREAD_MUTEX_INITIALIZER;
+
+int contNum = 0;
+pthread_mutex_t setContNum = PTHREAD_MUTEX_INITIALIZER;
+int contMem = 0;
+pthread_mutex_t setContMem = PTHREAD_MUTEX_INITIALIZER;
+int contMemMax = 0;
+pthread_mutex_t setContMemMax = PTHREAD_MUTEX_INITIALIZER;
+int contVitt = 0;
+pthread_mutex_t setContVitt = PTHREAD_MUTEX_INITIALIZER;
+int contEnd = 0;
+pthread_mutex_t setContEnd = PTHREAD_MUTEX_INITIALIZER;
+
 FILE* log_file = NULL;
 pthread_mutex_t log_lock = PTHREAD_MUTEX_INITIALIZER;
 char *fileLogName;
@@ -56,7 +67,7 @@ int updatemax(fd_set set, int fdmax)
 
 //	attraverso il file config che contiene i 5 parametri, estrabolo le informaizoni
 //	e le carico in 5 variabili.
-int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileLogName)
+int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileLogName, char **politica)
 {
 	//	descrittori
 	FILE *fd = NULL;
@@ -117,6 +128,7 @@ int parsing(long *thrw, long *memMax, char **sktname, long *numMax, char **fileL
 				c++;
 				if (c == 4)	strncpy(*sktname, string, MAXS);
 				else if (c == 5) strncpy(*fileLogName, string, MAXS);
+				else if (c == 6) strncpy(*politica, string, MAXS);
 			}
 			break;
 		case 2:
@@ -177,6 +189,7 @@ void message(int back, msg_t *msg)
 	case -4:
 		msg->op = OP_END;
 		break;
+	//	cancellazione della politica
 	case -5:
 		msg->op = OP_LFU;
 		break;
@@ -200,6 +213,18 @@ int operation(int fd_io, msg_t *msg)
 		LOCK(&setTree);
 		tmp = openFile(pRoot, msg->nome, msg->flags, msg->cLock);
 		UNLOCK(&setTree);
+		if (tmp == 0){
+			LOCK(&setContMem);
+			contMem = contMem + strlen(msg->str);
+			LOCK(&setContMemMax);
+			if (contMemMax < contMem)
+				contMemMax = contMem;
+			UNLOCK(&setContMemMax);
+			UNLOCK(&setContMem);
+			LOCK(&setContNum);
+			contNum++;
+			UNLOCK(&setContNum);
+		}
 		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
@@ -265,6 +290,18 @@ int operation(int fd_io, msg_t *msg)
 		LOCK(&setTree);
 		tmp = writeFile(pRoot, msg->nome, msg->str, msg->cLock);
 		UNLOCK(&setTree);
+		if (tmp == 0){
+			LOCK(&setContMem);
+			contMem = contMem + strlen(msg->str);
+			LOCK(&setContMemMax);
+			if (contMemMax < contMem)
+				contMemMax = contMem;
+			UNLOCK(&setContMemMax);
+			UNLOCK(&setContMem);
+			LOCK(&setContNum);
+			contNum++;
+			UNLOCK(&setContNum);
+		}
 		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
@@ -276,6 +313,18 @@ int operation(int fd_io, msg_t *msg)
 		LOCK(&setTree);
 		tmp = appendToFile(pRoot, msg->nome, msg->str, msg->cLock);
 		UNLOCK(&setTree);
+		if (tmp == 0){
+			LOCK(&setContMem);
+			contMem = contMem + strlen(msg->str);
+			LOCK(&setContMemMax);
+			if (contMemMax < contMem)
+				contMemMax = contMem;
+			UNLOCK(&setContMemMax);
+			UNLOCK(&setContMem);
+			LOCK(&setContNum);
+			contNum++;
+			UNLOCK(&setContNum);
+		}
 		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
@@ -298,6 +347,11 @@ int operation(int fd_io, msg_t *msg)
 		LOCK(&setTree);
 		tmp = fileRemove(pRoot,msg->nome, msg->cLock);
 		UNLOCK(&setTree);
+		if (tmp == 0){
+			LOCK(&setContEnd);
+			contEnd++;
+			UNLOCK(&setContEnd);
+		}	
 		message(tmp, msg);
 		operation(fd_io, msg);
 		break;
@@ -329,16 +383,26 @@ int operation(int fd_io, msg_t *msg)
 		break;
 	// caso della politica di cancellamento
 	case OP_LFU:
-		LOCK(&log_lock);
-		fprintf(log_file, "LFU per il file %s\n", msg->nome);	// LogFile
-		fflush(log_file);
-		UNLOCK(&log_lock);
-		LOCK(&setTree);
-		tmp = lfuRemove(pRoot, &re);
-		UNLOCK(&setTree);
-		LOCK(&setCont);
-		cont++;
-		UNLOCK(&setCont);
+		if (strcmp(politica, "LFU") == 0){
+			LOCK(&log_lock);
+			fprintf(log_file, "LFU per il file %s\n", msg->nome);	// LogFile
+			fflush(log_file);
+			UNLOCK(&log_lock);
+			LOCK(&setTree);
+			tmp = lfuRemove(pRoot, &re);
+			UNLOCK(&setTree);
+		} else if (strcmp(politica, "FIFO") == 0) {
+			LOCK(&log_lock);
+			fprintf(log_file, "FIFO per il file %s\n", msg->nome);	// LogFile
+			fflush(log_file);
+			UNLOCK(&log_lock);
+			LOCK(&setTree);
+			tmp = fifoRemove(pRoot, &re);
+			UNLOCK(&setTree);
+		}
+		LOCK(&setContVitt);
+		contVitt++;
+		UNLOCK(&setContVitt);
 		LOCK(&setNumMax);
 		numMax++;
 		UNLOCK(&setNumMax);
@@ -522,12 +586,12 @@ int main(int argc, char *argv[])
 	pRoot = newNode(0, "pRoot", "abcd", 1, 1);
 
 	fprintf(stdout, "Numero di processo del server: %d\n", getpid());
-	//	controllo se file config non esiste
+
 	sktname = alloca(MAXS);
-
 	fileLogName = alloca(MAXS);
+	politica = alloca(MAXS);
 
-	parsing(&thrw, &memMax, &sktname, &numMax, &fileLogName);
+	parsing(&thrw, &memMax, &sktname, &numMax, &fileLogName, &politica);
 
 	fprintf(stdout,"nthread:%ld - memoria:%ld - socketname:%s - nfile massimi:%ld\n", thrw, memMax, sktname, numMax);
 	
@@ -658,17 +722,26 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-	// da fare le printf (carine)
-	
+	// Chiusura server
 	pthread_join(signal_handler, NULL);
 	close(fd);
 	unlink(sktname);
 	free(sktname);
 	fclose(log_file);
 	free(fileLogName);
+	free(politica);
 	free(thr);
 	msgClean(attesa);
 	cleanTree(pRoot);
-	fprintf(stdout, "Memoria Cache cancellata\n");
+	// Stampe chiusura server
+	fprintf(stdout, "\nNumero di file memorizzati nel server: %d\n", contNum);
+	fprintf(stdout, "Dimensione massima (Mbytes) raggiunta: %d\n", contMemMax);
+	if ((numMax - contNum) > 0)
+		fprintf(stdout, "Puoi ancora salvare nel server: %ld File\n", (numMax - contNum));
+	else
+		fprintf(stdout, "Puoi ancora salvare nel server: 0 File\n");
+	
+	fprintf(stdout, "Numero file vittima: %d\n", contVitt);
+	fprintf(stdout, "Memoria cache liberata da: %d File\n", contNum-contEnd);
 	pthread_exit(NULL);
 }

@@ -176,14 +176,10 @@ int writeBytes(const char* name, char* text, long size, const char* dirname)
 {
 	FILE *file;
 	errno = 0;
-	fprintf(stdout, "%ld\n", strlen(name));
 	char* path = alloca(strlen(dirname) + strlen(name) + 1);
 
-	fprintf(stdout, "ciao");
 	sprintf(path, "%s/%s", dirname, name);
-	fprintf(stdout, "path1: %s \n", path);
 	path[strlen (dirname) + strlen(name) + 1] = '\0';
-	fprintf(stdout, "path2: %s \n", path);
 	errno = 0;
 	if ((file = fopen(path, "wb")) == NULL){
 		fprintf(stderr, "errno:%d\n", errno);

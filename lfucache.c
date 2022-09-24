@@ -1,5 +1,8 @@
 #include <lfucache.h>
 
+int ordine = 0;				//	ordine di ingresso nell'albero
+pthread_mutex_t setOrdine;
+
 extern long memMax;
 extern long numMax;
 extern pthread_mutex_t setMemMax;
@@ -116,11 +119,17 @@ nodo* searchLeaf (nodo* n)
 	{
 		if ((leaf = isLeaf(n->left)) != NULL)
 		{
+			free(n->left->nome);
+			free(n->left->testo);
+			free(n->left);
 			n->left = NULL;
 			return leaf;
 		}
 		if ((leaf = isLeaf(n->right)) != NULL)
 		{
+			free(n->right->nome);
+			free(n->right->testo);
+			free(n->right);
 			n->right = NULL;
 			return leaf;
 		}
@@ -130,6 +139,9 @@ nodo* searchLeaf (nodo* n)
 	{
 		if ((leaf = isLeaf(n->right)) != NULL)
 		{
+			free(n->right->nome);
+			free(n->right->testo);
+			free(n->right);
 			n->right = NULL;
 			return leaf;
 		}
@@ -139,6 +151,9 @@ nodo* searchLeaf (nodo* n)
 	{
 		if ((leaf = isLeaf(n->left)) != NULL)
 		{
+			free(n->left->nome);
+			free(n->left->testo);
+			free(n->left);
 			n->left = NULL;
 			return leaf;
 		}
@@ -184,6 +199,11 @@ int lfuRemove(nodo* n, msg_t** text)
 	return 0;
 }
 
+int fifoRemove(nodo* root, msg_t** text)
+{
+	return 0;
+}
+
 //	se viene fatta una operazione di richiesta del cient, aumento la frequenza  
 int addFrequenza(int fre)
 {
@@ -213,10 +233,13 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock)
 	switch(flags){
 		case 0:
 			if (findTreeFromName(root,name) == NULL){
-					addTree(root, 0, name, "", 0, 1);
+					root = addTree(root, 0, name, "", 0, 1);
 					LOCK(&setNumMax);
 					numMax--;
 					UNLOCK(&setNumMax);
+					LOCK(&setOrdine);
+					ordine++;
+					UNLOCK(&setOrdine);
 					}
 			else return -1;
 		break;
@@ -229,12 +252,16 @@ int openFile(nodo* root, char* name, int flags, pid_t cLock)
 		break;
 		case 3:
 			if (findTreeFromName(root,name) == NULL){
-				addTree(root, 0, name, "", 0, 0);
+				root = addTree(root, 0, name, "", 0, 0);
 				changeLock(root, name, 1, cLock);
 				changeStatus(root, name, 0, cLock);
 				LOCK(&setNumMax);
 				numMax--;
 				UNLOCK(&setNumMax);
+				LOCK(&setOrdine);
+				ordine++;
+				root->ord = ordine;
+				UNLOCK(&setOrdine);
 				}
 			else return -1;
 		break;
@@ -302,13 +329,13 @@ int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 	else if (find->stato != 0 || (find->lucchetto == 0 && find->sLock != cLock))	return -2;
 	else
 	{
-		int somma = strlen(find->testo) + strlen(text);
-		CHECK_EQ_EXIT(find->testo = realloc(find->testo, somma + 2), NULL, ERROR: malloc);
-		strncat(find->testo, text, strlen(text));
 		LOCK(&setMemMax);
 		memMax = memMax - strlen(find->testo);
 		UNLOCK(&setMemMax);
 		if (memMax <= 0)	{fprintf(stderr,"sto cancellando....\n"); return -5;}
+		int somma = strlen(find->testo) + strlen(text);
+		CHECK_EQ_EXIT(find->testo = realloc(find->testo, somma + 2), NULL, ERROR: malloc);
+		strncat(find->testo, text, strlen(text));
 		addFrequenza(find->freq);
 	} 
 	return 0;
@@ -316,13 +343,13 @@ int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 
 int writeFile(nodo* root, char* name, char* text, pid_t cLock)
 {
-	nodo* find = NULL;
 	int tmp;
-	if ((find = findTreeFromName(root,name)) == NULL) {	
-		if ((tmp = openFile(root,name,0,cLock)) != 0)	
-			return tmp;
-		else
-			return appendToFile(root,name,text,cLock);
+	if ((findTreeFromName(root,name)) == NULL) {	
+			if ((tmp = openFile(root,name,0,cLock)) != 0){
+				return tmp;
+			}
+			else 
+				return appendToFile(root,name,text,cLock);
 		}
 	else	return -1;
 }

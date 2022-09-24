@@ -14,6 +14,7 @@
 //	struttura dati per l'albero
 typedef struct tree{
 	int freq;				//	frequenza, il numero di volte che un file viene fatta una qualsiasi operazione
+	int ord;				//	ordine di ingresso nell'albero
 	char* nome;				//	nome del file
 	char* testo;			//	testo del file
 	int stato;				//	stato, indica se un file e' chiuso(1) o aperto(0)
@@ -72,6 +73,14 @@ nodo* searchLeaf (nodo* n);
  * \return n ok  NULL non esiste l'albero   
 */
 int lfuRemove(nodo* n, msg_t** text);
+
+/** 
+ * \
+ * \
+ * \
+ * \return   
+*/
+int fifoRemove(nodo* root, msg_t** text);
 
 /** 
  * \cerca il nome nel nodo poi si cerca una foglia qualsisi e con le considerazioni della funzione searchLeaf
