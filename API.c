@@ -176,10 +176,14 @@ int writeBytes(const char* name, char* text, long size, const char* dirname)
 {
 	FILE *file;
 	errno = 0;
+	fprintf(stdout, "%ld\n", strlen(name));
 	char* path = alloca(strlen(dirname) + strlen(name) + 1);
 
+	fprintf(stdout, "ciao");
 	sprintf(path, "%s/%s", dirname, name);
+	fprintf(stdout, "path1: %s \n", path);
 	path[strlen (dirname) + strlen(name) + 1] = '\0';
+	fprintf(stdout, "path2: %s \n", path);
 	errno = 0;
 	if ((file = fopen(path, "wb")) == NULL){
 		fprintf(stderr, "errno:%d\n", errno);
@@ -258,7 +262,7 @@ int readNFiles(int N, const char* dirname){
 	//	mando il messaggio al server
 	if (writen(sockfd, reads, sizeof(msg_t)) <= 0){
 		errno = -1;
-		perror("ERRORE: scrittura readsFile");
+		perror("ERRORE: scrittura readsFile\n");
 		return -1;
 	}
 	msg_t tmp;
@@ -266,7 +270,7 @@ int readNFiles(int N, const char* dirname){
 		//	ricevo il messaggio dal server
 		if (readn(sockfd, &tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
-		perror("ERRORE: lettura risposta readsFile");
+		perror("ERRORE: lettura risposta readsFile\n");
 		}
 		if (tmp.flags == 0)	return -1;
 		if (tmpo == 0){
@@ -274,9 +278,19 @@ int readNFiles(int N, const char* dirname){
 			ret = tmp.flags;
 			tmpo = 1;
 		}
-		writeBytes(tmp.nome,tmp.str,tmp.lStr,dirname);
+		if (dirname != NULL) {
+			char* fileName = strrchr(tmp.nome, '/');	//	prende l'ultimo '/'
+			++fileName;
+			writeBytes(fileName,tmp.str,tmp.lStr,dirname);
+		}
 		N--;
 	}while(N>0);
+
+	// stampo i/il messaggio/i
+	if (p){
+		fprintf(stdout,"Reads File\n");
+		fprintf(stdout, "File letti: %d \n\n", ret);
+	}
 
 	return ret;
 }
@@ -424,7 +438,7 @@ int lockFile(const char* pathname)
 	}
 	// stampo i/il messaggio/i
 	if (p){
-		fprintf(stdout,"Lcok File\n");
+		fprintf(stdout,"Lock File\n");
 		stampaOp(tmp.op);
 	}
 

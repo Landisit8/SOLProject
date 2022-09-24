@@ -40,7 +40,7 @@ nodo* findTreeMin(nodo* n, int* min, char** name)
 		if (*min > (n->freq))	
 		{
 			*min = n->freq;
-			strcpy(*name,n->nome); 
+			strncpy(*name,n->nome, strlen(n->nome) + 1); 
 		}
 	}
 	findTreeMin(n->left,min,name);
@@ -71,20 +71,22 @@ int swapTree (nodo* a, nodo* b)
 	nodo* tmp = newNode(a->freq, a->nome, a->testo, a->stato, a->lucchetto);
 
 	a->freq = b->freq;
-	strcpy(a->nome, b->nome);
-	strcpy(a->testo, b->testo);
+	strncpy(a->nome, b->nome, strlen(b->nome) + 1);
+	strncpy(a->testo, b->testo, strlen(b->testo) + 1);
 	a->stato = b->stato;
+
 	b->freq = tmp->freq;
 
-	if (realloc(b->nome, strlen(tmp->nome)) == NULL)	return -1;	//EMEMORY
-
-	//	meglio memcpy di strcpy
-	strcpy(b->nome, tmp->nome);
-
-	if (realloc(b->testo, strlen(tmp->testo)) == NULL)	return -1;	//EMEMORY
-	//	meglio memcpy di strcpy
-	strcpy(b->testo, tmp->testo);
+	free(b->nome);
+	b->nome = alloca(strlen(tmp->nome) + 1);
+	strncpy(b->nome, tmp->nome, strlen(tmp->nome));
+	free(b->testo);
+	b->testo = alloca(strlen(tmp->testo) + 1);
+	strncpy(b->testo, tmp->testo, strlen(tmp->testo) + 1);
 	b->stato = tmp->stato;
+
+	free(tmp->nome);
+	free(tmp->testo);
 	free(tmp);
 	return 0;
 }	
@@ -264,11 +266,11 @@ int readFile(nodo* root, char* name, msg_t** text, pid_t cLock)
 void readsFile(nodo* root, int n, pid_t cLock, msg_l* buffer)
 {
 	if (root == NULL)	return;
-	msg_t* tmp = alloca(sizeof(msg_t));
 	if(strcmp((root->nome), "pRoot")){
 	if (root->stato != 1){
 	if ((root->lucchetto != 1 && root->sLock != cLock) || root->lucchetto != 0){
 		if (n >= 0){
+			msg_t* tmp = alloca(sizeof(msg_t));
 			strncpy(tmp->str, root->testo, strlen(root->testo));
 			tmp->lStr = strlen(root->testo);
 			strncpy(tmp->nome, root->nome, strlen(root->nome));
@@ -276,6 +278,7 @@ void readsFile(nodo* root, int n, pid_t cLock, msg_l* buffer)
 			msgHead(tmp, buffer);
 			n--;
 		} else if (n == -1){
+			msg_t* tmp = alloca(sizeof(msg_t));
 			strncpy(tmp->str, root->testo, strlen(root->testo));
 			tmp->lStr = strlen(root->testo);
 			strncpy(tmp->nome, root->nome, strlen(root->nome));
@@ -343,6 +346,8 @@ int fileRemove(nodo* root, char* nome, pid_t cLock)
 
 	if (swapTree(leaf, find) != 0)	return -1;
 
+	free(leaf->nome);
+	free(leaf->testo);
 	free(leaf);
 	addFrequenza(find->freq);
 	return 0;

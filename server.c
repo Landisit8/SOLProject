@@ -225,7 +225,7 @@ int operation(int fd_io, msg_t *msg)
 	case READS_OP:
 	//	caso particolare per mandare anche il testo insieme alla risposta
 		LOCK(&log_lock);
-		fprintf(log_file, "Reads del file %s\n", msg->nome);	// LogFile
+		fprintf(log_file, "Reads dei file %s\n", msg->nome);	// LogFile
 		fflush(log_file);
 		UNLOCK(&log_lock);
 		if (msg->flags == 0)	msg->flags = -1;
@@ -255,6 +255,7 @@ int operation(int fd_io, msg_t *msg)
 			}
 			free(res);
 		}
+		msgClean(buffer);
 		break;
 	case WRITE_OP:
 		LOCK(&log_lock);
@@ -657,6 +658,8 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	// da fare le printf (carine)
+	
 	pthread_join(signal_handler, NULL);
 	close(fd);
 	unlink(sktname);
