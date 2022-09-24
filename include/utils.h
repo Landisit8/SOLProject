@@ -71,7 +71,6 @@
 
 /**
  * \brief Procedura di utilita' per la stampa degli errori
- *
  */
 static inline void print_error(const char *str, ...)
 {
@@ -182,6 +181,9 @@ typedef struct msg
   struct msg *next;
 } msg_t;
 
+/**
+ * struct della lista di messaggi
+ */
 typedef struct msgList
 {
   msg_t *testa;
@@ -189,12 +191,18 @@ typedef struct msgList
   size_t lung;
 } msg_l;
 
+/**
+ * setto la lista
+ */
 static inline void msg_lStart(msg_l *list)
 {
   list->testa = NULL;
   list->coda = NULL;
   list->lung = 0;
 }
+/**
+ * Funzione che fa la malloc e controlla
+ */
 static inline void *alloca(size_t size)
 {
   void *alloca = malloc(size);
@@ -203,30 +211,34 @@ static inline void *alloca(size_t size)
   memset(alloca, 0, size);
   return alloca;
 }
-
+/**
+ * Inserimento in testa
+ */
 static inline void msgHead(msg_t *head, msg_l *list)
 {
-  // empty list
+  // lista vuota
   if (list->lung == 0)
   {
-    // head is the only element
+    // la testa è l'unico elemento
     list->testa = head;
     list->coda = head;
   }
   else
   {
-    // list has at least one element
-    // attach to the new node the old list
+    // lista contiene almeno un elemento
+    // allegare al nuovo nodo la vecchia lista
     head->next = list->testa;
-    // now new node is the head of the list
+    // ora il nuovo nodo è in testa alla lista
     list->testa = head;
   }
 
-  // increase size of list
+  // aumentare la dimensione dell'elenco
   list->lung++;
   return;
 }
-
+/**
+ * copia 2 messaggi
+ */
 static inline void msgcpy(msg_t *destination, msg_t *source)
 {
   destination->lNome = source->lNome;
@@ -246,39 +258,39 @@ static inline void msgcpy(msg_t *destination, msg_t *source)
 
 static inline void msgPopReturn(msg_l *list, msg_t **toReturn)
 {
-  // if the list is null return
+  // se l'elenco è null return
   if (list->testa == NULL)
     return;
 
   msg_t *current = list->testa;
 
-  // the list has only one element
+  // l'elenco ha un solo elemento
   if (current->next == NULL)
   {
 
-    // copy the element in the return node
+    // copia l'elemento nel nodo di ritorno
     msgcpy(*toReturn, current);
-    // free the only element of the list
+    // libera l'unico elemento della lista
     free(current);
 
-    // set the list back to null
+    // reimpostare l'elenco su null
     list->testa = NULL;
     list->coda = NULL;
     list->lung = list->lung - 1;
     return;
   }
 
-  // cycle the list until the second-last
+  // scorrere l'elenco fino alla penultima
   while (current->next->next != NULL)
   {
     current = current->next;
   }
 
-  // copying the last element
+  // copiando l'ultimo elemento
   msgcpy(*toReturn, current->next);
-  // freeing it
+  // liberandolo
   free(current->next);
-  // updating the list
+  // aggiornando l'elenco
   current->next = NULL;
   list->coda = current;
   list->lung = list->lung - 1;
@@ -286,33 +298,53 @@ static inline void msgPopReturn(msg_l *list, msg_t **toReturn)
   return;
 }
 
+//  cancello la lista
+static inline void msgClean(msg_l* list)
+{
+    msg_t* current = list->testa;
+    msg_t* next;
+
+    while (current != NULL)
+    {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+    list->testa = NULL;
+    list->coda = NULL;
+    free(list);
+    return;
+}
+/**
+ * Stampa della risposta dal server
+ */
 static inline void stampaOp(ops op)
 {
   switch (op)
   {
   case OP_OK:
-    printf("OPERAZIONE ESEGUITA CON SUCCESSO\n");
+    printf("OPERAZIONE ESEGUITA CON SUCCESSO\n\n");
     break;
   case OP_FOK:
-    printf("OPERAZIONE ESEGUITA CON NON SUCCESSO\n");
+    printf("OPERAZIONE ESEGUITA CON NON SUCCESSO\n\n");
     break;
   case OP_BLOCK:
-    printf("FILE BLOCCATO\n");
+    printf("FILE BLOCCATO\n\n");
     break;
   case OP_FFL_SUCH:
-    printf("FILE RICHIESTO NON ESISTE\n");
+    printf("FILE RICHIESTO NON ESISTE\n\n");
     break;
   case OP_MSG_SIZE:
-    printf("MESSAGGIO TROPPO LUNGO\n");
+    printf("MESSAGGIO TROPPO LUNGO\n\n");
     break;
   case OP_LFU:
-    printf("RIMOZIONE DI UN FILE IN CASO DI ECCESSO DI DATI\n");
+    printf("RIMOZIONE DI UN FILE IN CASO DI ECCESSO DI DATI\n\n");
     break;
   case OP_END:
-    printf("CHIUSURA' DELLA CONNESSIONE\n");
+    printf("CHIUSURA' DELLA CONNESSIONE\n\n");
     break;
   default:
-    fprintf(stderr,"COMMAND NOT FOUND\n");
+    fprintf(stderr,"COMMAND NOT FOUND\n\n");
     break;
   }
   fflush(stdout);

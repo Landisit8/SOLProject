@@ -1,12 +1,4 @@
 #define _POSIX_C_SOURCE 199309L
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include <getopt.h>
-#include <time.h>
-#include <dirent.h>
-
 #include <API.h>
 #include <utils.h>
 #include <conn.h>
@@ -14,21 +6,94 @@
 
 #define MAX 2048
 
-
+char* cartellaLettura = NULL;
+char* cartellaEspulsi = NULL;
 char* SOCKET = NULL;
-/*
-int writeDir(const char* dirname,long* n){
-	if (chdir(dirname) == -1)	return 0;
 
-	DIR *d;
-
-	if ((d = opendir(".")) == NULL)	return -1;
-	else {
-		struct dir *file;
-		
-	}
+/**
+ * \ Guarda se sei dentro la directory corrente
+ */
+int isdot (const char dir[]){
+	int l = strlen(dir);
+	if (l > 0 && dir[l - 1] == '.') return 1;
+	return 0;
 }
-*/
+
+/**
+ * \ ottiene il pathname assoluto di un file
+ */
+char* cwd(){
+	char* buf = alloca(MAX);
+
+	if (getcwd(buf, MAX) == NULL){
+		perror("Errore durante getcwd");
+		free(buf);
+		return NULL;
+	}
+
+	return buf;
+}
+
+/**
+ * \
+ * 
+ */
+// return -1: Errore
+// return 0: non è risucito ad entrare nella cartella
+// return 1: successo
+int writeDir(const char* dirname,long* nume){
+		if (chdir(dirname) == -1){
+			// quando ho finito le cartelle da ciclare
+			return 0;
+		}
+
+		DIR *dir;
+		if ((dir = opendir(".")) == NULL){
+			// errore nell'entrare nella cartella
+			return -1;
+		} else {
+			struct dirent *file;
+
+			while ((errno = 0, file = readdir(dir)) != NULL) {
+				struct stat statb;
+
+				// prendo le statistiche del file/cartelle
+				if (stat(file->d_name, &statb) == -1){
+					print_error("ERRORE stat %s\n", file->d_name);
+					return -1;
+				}
+
+				// se il file è una cartella
+				if (S_ISDIR(statb.st_mode)) {
+					// controllo di non essere nella directory corrente
+					if (!isdot(file->d_name)){
+						// chiamata ricorsiva
+						if (writeDir(file->d_name, nume) != 0) {
+							// Torno indietro alla directory precedente
+							if (chdir("..") == -1){
+								fprintf(stderr,"impossibile tornare dalla directory precedente");
+								return -1;
+							}
+						}
+					}
+				} else {
+					if (*nume == 0) return 1;
+					char* buf = cwd();
+					buf = strncat(buf,"/",2);
+					buf = strncat(buf, file->d_name, strlen(file->d_name));
+					
+					// chiamo la write file per vedere se è andato tutto bene
+					if (writeFile(buf,cartellaEspulsi) == 0)	*nume = *nume - 1;
+					free(buf);
+				}
+
+			}
+			//	errore
+			if (errno != 0)	perror("readdir");
+			closedir(dir);
+		}
+		return 1;
+}
 
 void listaHelp(){
 	printf("Opzioni:\n\n");
@@ -49,21 +114,25 @@ void listaHelp(){
 	printf("-p: Abilita' le stampe in tutto il progetto.\n\n");
 }
 
+/**
+ *	\ Funzione che prende i valori inseriti dall'utente 
+ *	\ e decide l'operazione da fare
+*/
 int parsing (int n, char** valori){
 	struct timespec abstime;
 	int opt;
-	void* buf = NULL;
-	size_t sz;
 	int r;
+	int p;
+	size_t sz;
+	long num = 0;
+	long nume = -1;
+	long sleeptime = 0;
 	char* token;
 	char* file;
 	char *tmp = NULL;
-	long num = 0;
-	long nume = -1;
 	char* nome;
-	long sleeptime = 0;
-	int p;
 	char* dirname;
+	void* buf = NULL;
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1){
 		switch(opt) 
@@ -96,19 +165,18 @@ int parsing (int n, char** valori){
 							strncpy(dirname, token, strlen(token));
 							num++;;
 						}
-						if (num == 1) isNumber(token, &num);
+						if (num == 1) isNumber(token, &nume);
 						token = strtok(NULL,",");
 					}
 					if (p){
-						if (n>0) fprintf(stdout,"Scrivo %ld file ", nume);
+						if (nume>0) fprintf(stdout,"Scrivo %ld file ", nume);
 						else fprintf(stdout, "Scrivo tutti i file ");
 						fprintf(stdout, "da questa cartella %s\n", dirname);
 					}
 
-					if (nume == 0)	n = -1;
+					if (nume == 0)	nume = -1;
 
-					//if (writeDir(dirname, &nume) < 0)
-					return -1;		
+					if (writeDir(dirname, &nume) < 0)	return -1;	
 			break;
 			case 'W':
 				token = strtok(optarg,",");
@@ -118,8 +186,11 @@ int parsing (int n, char** valori){
 					file = alloca(strlen(token) + 1);
 					strncpy(file, token, strlen(token) + 1);
 					file[strlen(token) + 1] = '\0';
-					r = writeFile(file, NULL);
+					if (cartellaEspulsi)
+						r = writeFile(file, cartellaEspulsi);
 					//printf("valore di r: %d\n", r);
+					else
+						r = writeFile(file, NULL);
 					if(r == -1)
 					{
 						perror("ERROR: write to file");
@@ -128,6 +199,9 @@ int parsing (int n, char** valori){
 				}
 			break;
 			case 'D':
+				cartellaEspulsi = alloca(strlen(optarg) + 1);
+				strncpy(cartellaEspulsi,optarg,strlen(optarg) +1);
+				if (p) fprintf(stdout,"I file espulsi vengono salvati in %s", optarg);
 
 			break;
 			case 'r':
@@ -139,7 +213,7 @@ int parsing (int n, char** valori){
 				if (r == 0){	//da aggiungere il controllo se la cartella è NULL
 					nome = strrchr(optarg, '/');
 					nome++; 
-					writeBytes(nome,buf,sz,"./read");
+					if (cartellaLettura) writeBytes(nome,buf,sz,"./read");
 				}
 			break;
 			case 'R':
@@ -152,14 +226,24 @@ int parsing (int n, char** valori){
 				//	se tmp esiste:
 				if (tmp) isNumber(tmp, &num);
 
-				r = readNFiles(num, "./read");
-				if (r == -1){
+				if (cartellaLettura){
+					r = readNFiles(num, cartellaLettura);
+					if (r == -1){
 					errno = ECONNREFUSED;
 					perror("readNFiles");
 				}
+				} else {
+					r = readNFiles(num, NULL);
+					if (r == -1){
+					errno = ECONNREFUSED;
+					perror("readNFiles");
+					}
+				}
 			break;
 			case 'd':
-			
+				cartellaLettura = alloca(strlen(optarg) + 1);
+				strncpy(cartellaLettura, optarg, strlen(optarg) + 1);
+				if (p)	fprintf(stdout,"I file letti vengono salvati in %s", cartellaLettura);
 			break;
 			case 't':
 				if((isNumber(optarg, &sleeptime)) == 1)
@@ -168,7 +252,6 @@ int parsing (int n, char** valori){
 					return EXIT_FAILURE;
 				}
 				if(p) fprintf(stdout, "Timeout tra le richieste impostato su %ld\n\n", sleeptime);
-
 			break;
 			case 'l':
 				r = lockFile(optarg);
@@ -205,7 +288,7 @@ int parsing (int n, char** valori){
 				listaHelp();
 			break;
 		}
-	sleep(sleeptime*1000);
+	sleep(sleeptime);
 	}
 	return 0;
 }

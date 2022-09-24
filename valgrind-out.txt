@@ -1,684 +1,170 @@
-==2445== Memcheck, a memory error detector
-==2445== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==2445== Using Valgrind-3.15.0-608cb11914-20190413 and LibVEX; rerun with -h for copyright info
-==2445== Command: ./server
-==2445== Parent PID: 2444
-==2445== 
---2445-- 
---2445-- Valgrind options:
---2445--    --leak-check=full
---2445--    --show-leak-kinds=all
---2445--    --track-origins=yes
---2445--    --verbose
---2445--    --log-file=valgrind-out.txt
---2445-- Contents of /proc/version:
---2445--   Linux version 4.4.0-22000-Microsoft (Microsoft@Microsoft.com) (gcc version 5.4.0 (GCC) ) #653-Microsoft Wed Apr 27 16:06:00 PST 2022
---2445-- 
---2445-- Arch and hwcaps: AMD64, LittleEndian, amd64-cx16-lzcnt-rdtscp-sse3-ssse3-avx-avx2-bmi-f16c-rdrand
---2445-- Page sizes: currently 4096, max supported 4096
---2445-- Valgrind library directory: /usr/lib/x86_64-linux-gnu/valgrind
---2445-- Reading syms from /mnt/c/Users/feder/OneDrive - University of Pisa/Documenti/GitHub/SOLProject/server
---2445-- Reading syms from /usr/lib/x86_64-linux-gnu/ld-2.31.so
---2445--   Considering /usr/lib/debug/.build-id/45/87364908de169dec62ffa538170118c1c3a078.debug ..
---2445--   .. build-id is valid
---2445-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/memcheck-amd64-linux
---2445--    object doesn't have a symbol table
---2445--    object doesn't have a dynamic symbol table
---2445-- Scheduler: using generic scheduler lock implementation.
---2445-- Reading suppressions file: /usr/lib/x86_64-linux-gnu/valgrind/default.supp
-==2445== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-2445-by-federico-on-???
-==2445== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-2445-by-federico-on-???
-==2445== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-2445-by-federico-on-???
-==2445== 
-==2445== TO CONTROL THIS PROCESS USING vgdb (which you probably
-==2445== don't want to do, unless you know exactly what you're doing,
-==2445== or are doing some strange experiment):
-==2445==   /usr/lib/x86_64-linux-gnu/valgrind/../../bin/vgdb --pid=2445 ...command...
-==2445== 
-==2445== TO DEBUG THIS PROCESS USING GDB: start GDB like this
-==2445==   /path/to/gdb ./server
-==2445== and then give GDB the following command
-==2445==   target remote | /usr/lib/x86_64-linux-gnu/valgrind/../../bin/vgdb --pid=2445
-==2445== --pid is optional if only one valgrind process is running
-==2445== 
-==2445== error calling PR_SET_PTRACER, vgdb might block
---2445-- REDIR: 0x4022e20 (ld-linux-x86-64.so.2:strlen) redirected to 0x580c9ce2 (???)
---2445-- REDIR: 0x4022bf0 (ld-linux-x86-64.so.2:index) redirected to 0x580c9cfc (???)
---2445-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_core-amd64-linux.so
---2445--    object doesn't have a symbol table
---2445-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so
---2445--    object doesn't have a symbol table
-==2445== WARNING: new redirection conflicts with existing -- ignoring it
---2445--     old: 0x04022e20 (strlen              ) R-> (0000.0) 0x580c9ce2 ???
---2445--     new: 0x04022e20 (strlen              ) R-> (2007.0) 0x0483f060 strlen
---2445-- REDIR: 0x401f600 (ld-linux-x86-64.so.2:strcmp) redirected to 0x483ffd0 (strcmp)
---2445-- REDIR: 0x4023380 (ld-linux-x86-64.so.2:mempcpy) redirected to 0x4843a20 (mempcpy)
---2445-- Reading syms from /mnt/c/Users/feder/OneDrive - University of Pisa/Documenti/GitHub/SOLProject/libs/libtree.so
---2445-- Reading syms from /usr/lib/x86_64-linux-gnu/libpthread-2.31.so
---2445--   Considering /usr/lib/debug/.build-id/7b/4536f41cdaa5888408e82d0836e33dcf436466.debug ..
---2445--   .. build-id is valid
---2445-- Reading syms from /usr/lib/x86_64-linux-gnu/libc-2.31.so
---2445--   Considering /usr/lib/debug/.build-id/18/78e6b475720c7c51969e69ab2d276fae6d1dee.debug ..
---2445--   .. build-id is valid
---2445-- REDIR: 0x491b480 (libc.so.6:memmove) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a780 (libc.so.6:strncpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b7b0 (libc.so.6:strcasecmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a0a0 (libc.so.6:strcat) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a7e0 (libc.so.6:rindex) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491cc50 (libc.so.6:rawmemchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x4937ce0 (libc.so.6:wmemchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x4937820 (libc.so.6:wcscmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b5e0 (libc.so.6:mempcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b410 (libc.so.6:bcmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a710 (libc.so.6:strncmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a150 (libc.so.6:strcmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b540 (libc.so.6:memset) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x49377e0 (libc.so.6:wcschr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a670 (libc.so.6:strnlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a230 (libc.so.6:strcspn) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b800 (libc.so.6:strncasecmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a1d0 (libc.so.6:strcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b950 (libc.so.6:memcpy@@GLIBC_2.14) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x4938f50 (libc.so.6:wcsnlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x4937860 (libc.so.6:wcscpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a820 (libc.so.6:strpbrk) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a100 (libc.so.6:index) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491a630 (libc.so.6:strlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x4923bb0 (libc.so.6:memrchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b850 (libc.so.6:strcasecmp_l) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b3d0 (libc.so.6:memchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x4937930 (libc.so.6:wcslen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491aae0 (libc.so.6:strspn) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b750 (libc.so.6:stpncpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b6f0 (libc.so.6:stpcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491cc90 (libc.so.6:strchrnul) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x491b8a0 (libc.so.6:strncasecmp_l) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x4a03500 (libc.so.6:__strrchr_avx2) redirected to 0x483ea10 (rindex)
---2445-- REDIR: 0x4a03310 (libc.so.6:__strchrnul_avx2) redirected to 0x4843540 (strchrnul)
---2445-- REDIR: 0x4a066c0 (libc.so.6:__mempcpy_avx_unaligned_erms) redirected to 0x4843660 (mempcpy)
---2445-- REDIR: 0x49150e0 (libc.so.6:malloc) redirected to 0x483b780 (malloc)
---2445-- REDIR: 0x4a06b60 (libc.so.6:__memset_avx2_unaligned_erms) redirected to 0x48428e0 (memset)
---2445-- REDIR: 0x491afa0 (libc.so.6:__GI_strstr) redirected to 0x4843ca0 (__strstr_sse2)
---2445-- REDIR: 0x49ff530 (libc.so.6:__memchr_avx2) redirected to 0x4840050 (memchr)
---2445-- REDIR: 0x4a066e0 (libc.so.6:__memcpy_avx_unaligned_erms) redirected to 0x48429f0 (memmove)
---2445-- REDIR: 0x4a030e0 (libc.so.6:__strchr_avx2) redirected to 0x483ebf0 (index)
---2445-- REDIR: 0x49feaa0 (libc.so.6:__strspn_sse42) redirected to 0x4843ef0 (strspn)
---2445-- REDIR: 0x49fe820 (libc.so.6:__strcspn_sse42) redirected to 0x4843e10 (strcspn)
---2445-- REDIR: 0x4a04fa0 (libc.so.6:__strncpy_avx2) redirected to 0x483f230 (strncpy)
---2445-- REDIR: 0x4a036d0 (libc.so.6:__strlen_avx2) redirected to 0x483ef40 (strlen)
---2445-- REDIR: 0x49156d0 (libc.so.6:free) redirected to 0x483c9d0 (free)
---2445-- REDIR: 0x4916b10 (libc.so.6:calloc) redirected to 0x483dce0 (calloc)
---2445-- REDIR: 0x49febd0 (libc.so.6:__strcmp_avx2) redirected to 0x483fed0 (strcmp)
---2445-- REDIR: 0x4a04c10 (libc.so.6:__strcpy_avx2) redirected to 0x483f090 (strcpy)
-==2445== Thread 3:
-==2445== Invalid write of size 1
-==2445==    at 0x483F0BE: strcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B651: newNode (lfucache.c:20)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c551 is 0 bytes after a block of size 17 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== Invalid write of size 1
-==2445==    at 0x483F0BE: strcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B69B: newNode (lfucache.c:22)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c5a0 is 0 bytes after a block of size 0 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B665: newNode (lfucache.c:21)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== Invalid read of size 1
-==2445==    at 0x483FEE8: strcmp (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B971: findTreeFromName (lfucache.c:68)
-==2445==    by 0x484B9F8: findTreeFromName (lfucache.c:72)
-==2445==    by 0x484C91A: appendToFile (lfucache.c:322)
-==2445==    by 0x484CB81: writeFile (lfucache.c:346)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c551 is 0 bytes after a block of size 17 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== Invalid read of size 1
-==2445==    at 0x483EF46: strlen (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484C96B: appendToFile (lfucache.c:326)
-==2445==    by 0x484CB81: writeFile (lfucache.c:346)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c5a0 is 0 bytes after a block of size 0 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B665: newNode (lfucache.c:21)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
---2445-- REDIR: 0x4915e80 (libc.so.6:realloc) redirected to 0x483df30 (realloc)
---2445-- REDIR: 0x491a6b0 (libc.so.6:strncat) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---2445-- REDIR: 0x4a04200 (libc.so.6:__strncat_avx2) redirected to 0x483ede0 (strncat)
-==2445== Conditional jump or move depends on uninitialised value(s)
-==2445==    at 0x483EDED: strncat (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484CA16: appendToFile (lfucache.c:328)
-==2445==    by 0x484CB81: writeFile (lfucache.c:346)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Uninitialised value was created by a heap allocation
-==2445==    at 0x483DFAF: realloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484C99A: appendToFile (lfucache.c:327)
-==2445==    by 0x484CB81: writeFile (lfucache.c:346)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== Invalid read of size 1
-==2445==    at 0x483FEE8: strcmp (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B971: findTreeFromName (lfucache.c:68)
-==2445==    by 0x484B9F8: findTreeFromName (lfucache.c:72)
-==2445==    by 0x484C5C4: readFile (lfucache.c:276)
-==2445==    by 0x10B775: operation (server.c:232)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c551 is 0 bytes after a block of size 17 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== Invalid read of size 1
-==2445==    at 0x483EF54: strlen (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484C66F: readFile (lfucache.c:281)
-==2445==    by 0x10B775: operation (server.c:232)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c551 is 0 bytes after a block of size 17 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== Invalid read of size 1
-==2445==    at 0x483EF54: strlen (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484C699: readFile (lfucache.c:282)
-==2445==    by 0x10B775: operation (server.c:232)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c551 is 0 bytes after a block of size 17 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== Syscall param write(buf) points to uninitialised byte(s)
-==2445==    at 0x486B32F: __libc_write (write.c:26)
-==2445==    by 0x486B32F: write (write.c:24)
-==2445==    by 0x10AE9B: writen (conn.h:48)
-==2445==    by 0x10B7EB: operation (server.c:235)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x5e48551 is on thread 3's stack
-==2445==  in frame #2, created by operation (server.c:205)
-==2445==  Uninitialised value was created by a stack allocation
-==2445==    at 0x10B46F: operation (server.c:205)
-==2445== 
-==2445== Thread 1:
-==2445== Syscall param unlink(pathname) points to unaddressable byte(s)
-==2445==    at 0x498ACDB: unlink (syscall-template.S:78)
-==2445==    by 0x10AEFD: cleanup (server.c:57)
-==2445==    by 0x48C18A6: __run_exit_handlers (exit.c:108)
-==2445==    by 0x48C1A5F: exit (exit.c:139)
-==2445==    by 0x489F089: (below main) (libc-start.c:342)
-==2445==  Address 0x4a6f040 is 0 bytes inside a block of size 1,024 free'd
-==2445==    at 0x483CA3F: free (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x10DA5A: main (server.c:705)
-==2445==  Block was alloc'd at
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x10CF7F: main (server.c:551)
-==2445== 
---2445-- Reading syms from /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
---2445--    object doesn't have a symbol table
-==2445== 
-==2445== HEAP SUMMARY:
-==2445==     in use at exit: 10,421 bytes in 20 blocks
-==2445==   total heap usage: 38 allocs, 18 frees, 915,507 bytes allocated
-==2445== 
-==2445== Searching for pointers to 20 not-freed blocks
-==2445== Checked 16,543,992 bytes
-==2445== 
-==2445== 6 bytes in 1 blocks are still reachable in loss record 1 of 16
-==2445==    at 0x483DFAF: realloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484C99A: appendToFile (lfucache.c:327)
-==2445==    by 0x484CB81: writeFile (lfucache.c:346)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== 8 bytes in 1 blocks are still reachable in loss record 2 of 16
-==2445==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x10D444: main (server.c:626)
-==2445== 
-==2445== 17 bytes in 1 blocks are still reachable in loss record 3 of 16
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== 24 bytes in 1 blocks are still reachable in loss record 4 of 16
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x10AB25: alloca (utils.h:200)
-==2445==    by 0x10D29F: main (server.c:596)
-==2445== 
-==2445== 36 bytes in 1 blocks are still reachable in loss record 5 of 16
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x401F5DE: strdup (strdup.c:42)
-==2445==    by 0x4019A91: _dl_load_cache_lookup (dl-cache.c:338)
-==2445==    by 0x400A989: _dl_map_object (dl-load.c:2102)
-==2445==    by 0x4015D46: dl_open_worker (dl-open.c:513)
-==2445==    by 0x49DB927: _dl_catch_exception (dl-error-skeleton.c:208)
-==2445==    by 0x4015609: _dl_open (dl-open.c:837)
-==2445==    by 0x49DA8C0: do_dlopen (dl-libc.c:96)
-==2445==    by 0x49DB927: _dl_catch_exception (dl-error-skeleton.c:208)
-==2445==    by 0x49DB9F2: _dl_catch_error (dl-error-skeleton.c:227)
-==2445==    by 0x49DA9F4: dlerror_run (dl-libc.c:46)
-==2445==    by 0x49DA9F4: __libc_dlopen_mode (dl-libc.c:195)
-==2445==    by 0x486C9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
-==2445== 
-==2445== 36 bytes in 1 blocks are still reachable in loss record 6 of 16
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x400D5B7: _dl_new_object (dl-object.c:196)
-==2445==    by 0x4006E96: _dl_map_object_from_fd (dl-load.c:997)
-==2445==    by 0x400A61A: _dl_map_object (dl-load.c:2236)
-==2445==    by 0x4015D46: dl_open_worker (dl-open.c:513)
-==2445==    by 0x49DB927: _dl_catch_exception (dl-error-skeleton.c:208)
-==2445==    by 0x4015609: _dl_open (dl-open.c:837)
-==2445==    by 0x49DA8C0: do_dlopen (dl-libc.c:96)
-==2445==    by 0x49DB927: _dl_catch_exception (dl-error-skeleton.c:208)
-==2445==    by 0x49DB9F2: _dl_catch_error (dl-error-skeleton.c:227)
-==2445==    by 0x49DA9F4: dlerror_run (dl-libc.c:46)
-==2445==    by 0x49DA9F4: __libc_dlopen_mode (dl-libc.c:195)
-==2445==    by 0x486C9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
-==2445== 
-==2445== 56 bytes in 1 blocks are still reachable in loss record 7 of 16
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B5E6: newNode (lfucache.c:17)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== 272 bytes in 1 blocks are possibly lost in loss record 8 of 16
-==2445==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x40149DA: allocate_dtv (dl-tls.c:286)
-==2445==    by 0x40149DA: _dl_allocate_tls (dl-tls.c:532)
-==2445==    by 0x4861322: allocate_stack (allocatestack.c:622)
-==2445==    by 0x4861322: pthread_create@@GLIBC_2.2.5 (pthread_create.c:660)
-==2445==    by 0x10D248: main (server.c:588)
-==2445== 
-==2445== 272 bytes in 1 blocks are possibly lost in loss record 9 of 16
-==2445==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x40149DA: allocate_dtv (dl-tls.c:286)
-==2445==    by 0x40149DA: _dl_allocate_tls (dl-tls.c:532)
-==2445==    by 0x4861322: allocate_stack (allocatestack.c:622)
-==2445==    by 0x4861322: pthread_create@@GLIBC_2.2.5 (pthread_create.c:660)
-==2445==    by 0x10D4DD: main (server.c:632)
-==2445== 
-==2445== 384 bytes in 1 blocks are still reachable in loss record 10 of 16
-==2445==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x401331C: _dl_check_map_versions (dl-version.c:274)
-==2445==    by 0x40160FC: dl_open_worker (dl-open.c:577)
-==2445==    by 0x49DB927: _dl_catch_exception (dl-error-skeleton.c:208)
-==2445==    by 0x4015609: _dl_open (dl-open.c:837)
-==2445==    by 0x49DA8C0: do_dlopen (dl-libc.c:96)
-==2445==    by 0x49DB927: _dl_catch_exception (dl-error-skeleton.c:208)
-==2445==    by 0x49DB9F2: _dl_catch_error (dl-error-skeleton.c:227)
-==2445==    by 0x49DA9F4: dlerror_run (dl-libc.c:46)
-==2445==    by 0x49DA9F4: __libc_dlopen_mode (dl-libc.c:195)
-==2445==    by 0x486C9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
-==2445==    by 0x486CC13: _Unwind_ForcedUnwind (unwind-forcedunwind.c:127)
-==2445==    by 0x486AF65: __pthread_unwind (unwind.c:121)
-==2445== 
-==2445== 472 bytes in 1 blocks are still reachable in loss record 11 of 16
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x48FD92D: __fopen_internal (iofopen.c:65)
-==2445==    by 0x48FD92D: fopen@@GLIBC_2.2.5 (iofopen.c:86)
-==2445==    by 0x10AFE2: parsing (server.c:83)
-==2445==    by 0x10CFF3: main (server.c:561)
-==2445== 
-==2445== 472 bytes in 1 blocks are still reachable in loss record 12 of 16
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x48FD92D: __fopen_internal (iofopen.c:65)
-==2445==    by 0x48FD92D: fopen@@GLIBC_2.2.5 (iofopen.c:86)
-==2445==    by 0x10B358: fileLogCreate (server.c:162)
-==2445==    by 0x10D046: main (server.c:568)
-==2445== 
-==2445== 1,024 bytes in 1 blocks are still reachable in loss record 13 of 16
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x10AB25: alloca (utils.h:200)
-==2445==    by 0x10CFC1: main (server.c:559)
-==2445== 
-==2445== 1,024 bytes in 1 blocks are possibly lost in loss record 14 of 16
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x10B019: parsing (server.c:90)
-==2445==    by 0x10CFF3: main (server.c:561)
-==2445== 
-==2445== 1,198 bytes in 1 blocks are still reachable in loss record 15 of 16
-==2445==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x400D283: _dl_new_object (dl-object.c:89)
-==2445==    by 0x4006E96: _dl_map_object_from_fd (dl-load.c:997)
-==2445==    by 0x400A61A: _dl_map_object (dl-load.c:2236)
-==2445==    by 0x4015D46: dl_open_worker (dl-open.c:513)
-==2445==    by 0x49DB927: _dl_catch_exception (dl-error-skeleton.c:208)
-==2445==    by 0x4015609: _dl_open (dl-open.c:837)
-==2445==    by 0x49DA8C0: do_dlopen (dl-libc.c:96)
-==2445==    by 0x49DB927: _dl_catch_exception (dl-error-skeleton.c:208)
-==2445==    by 0x49DB9F2: _dl_catch_error (dl-error-skeleton.c:227)
-==2445==    by 0x49DA9F4: dlerror_run (dl-libc.c:46)
-==2445==    by 0x49DA9F4: __libc_dlopen_mode (dl-libc.c:195)
-==2445==    by 0x486C9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
-==2445== 
-==2445== 5,120 bytes in 5 blocks are definitely lost in loss record 16 of 16
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x10B0E7: parsing (server.c:116)
-==2445==    by 0x10CFF3: main (server.c:561)
-==2445== 
-==2445== LEAK SUMMARY:
-==2445==    definitely lost: 5,120 bytes in 5 blocks
-==2445==    indirectly lost: 0 bytes in 0 blocks
-==2445==      possibly lost: 1,568 bytes in 3 blocks
-==2445==    still reachable: 3,733 bytes in 12 blocks
-==2445==         suppressed: 0 bytes in 0 blocks
-==2445== 
-==2445== ERROR SUMMARY: 14 errors from 14 contexts (suppressed: 0 from 0)
-==2445== 
-==2445== 1 errors in context 1 of 14:
-==2445== Syscall param unlink(pathname) points to unaddressable byte(s)
-==2445==    at 0x498ACDB: unlink (syscall-template.S:78)
-==2445==    by 0x10AEFD: cleanup (server.c:57)
-==2445==    by 0x48C18A6: __run_exit_handlers (exit.c:108)
-==2445==    by 0x48C1A5F: exit (exit.c:139)
-==2445==    by 0x489F089: (below main) (libc-start.c:342)
-==2445==  Address 0x4a6f040 is 0 bytes inside a block of size 1,024 free'd
-==2445==    at 0x483CA3F: free (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x10DA5A: main (server.c:705)
-==2445==  Block was alloc'd at
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x10CF7F: main (server.c:551)
-==2445== 
-==2445== 
-==2445== 1 errors in context 2 of 14:
-==2445== Thread 3:
-==2445== Syscall param write(buf) points to uninitialised byte(s)
-==2445==    at 0x486B32F: __libc_write (write.c:26)
-==2445==    by 0x486B32F: write (write.c:24)
-==2445==    by 0x10AE9B: writen (conn.h:48)
-==2445==    by 0x10B7EB: operation (server.c:235)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x5e48551 is on thread 3's stack
-==2445==  in frame #2, created by operation (server.c:205)
-==2445==  Uninitialised value was created by a stack allocation
-==2445==    at 0x10B46F: operation (server.c:205)
-==2445== 
-==2445== 
-==2445== 1 errors in context 3 of 14:
-==2445== Invalid read of size 1
-==2445==    at 0x483EF54: strlen (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484C699: readFile (lfucache.c:282)
-==2445==    by 0x10B775: operation (server.c:232)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c551 is 0 bytes after a block of size 17 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== 
-==2445== 1 errors in context 4 of 14:
-==2445== Invalid read of size 1
-==2445==    at 0x483EF54: strlen (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484C66F: readFile (lfucache.c:281)
-==2445==    by 0x10B775: operation (server.c:232)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c551 is 0 bytes after a block of size 17 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== 
-==2445== 1 errors in context 5 of 14:
-==2445== Invalid read of size 1
-==2445==    at 0x483FEE8: strcmp (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B971: findTreeFromName (lfucache.c:68)
-==2445==    by 0x484B9F8: findTreeFromName (lfucache.c:72)
-==2445==    by 0x484C5C4: readFile (lfucache.c:276)
-==2445==    by 0x10B775: operation (server.c:232)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c551 is 0 bytes after a block of size 17 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== 
-==2445== 1 errors in context 6 of 14:
-==2445== Conditional jump or move depends on uninitialised value(s)
-==2445==    at 0x483EDED: strncat (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484CA16: appendToFile (lfucache.c:328)
-==2445==    by 0x484CB81: writeFile (lfucache.c:346)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Uninitialised value was created by a heap allocation
-==2445==    at 0x483DFAF: realloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484C99A: appendToFile (lfucache.c:327)
-==2445==    by 0x484CB81: writeFile (lfucache.c:346)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== 
-==2445== 1 errors in context 7 of 14:
-==2445== Invalid read of size 1
-==2445==    at 0x483EF46: strlen (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484C96B: appendToFile (lfucache.c:326)
-==2445==    by 0x484CB81: writeFile (lfucache.c:346)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c5a0 is 0 bytes after a block of size 0 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B665: newNode (lfucache.c:21)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== 
-==2445== 1 errors in context 8 of 14:
-==2445== Invalid read of size 1
-==2445==    at 0x483FEE8: strcmp (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B971: findTreeFromName (lfucache.c:68)
-==2445==    by 0x484B9F8: findTreeFromName (lfucache.c:72)
-==2445==    by 0x484C91A: appendToFile (lfucache.c:322)
-==2445==    by 0x484CB81: writeFile (lfucache.c:346)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c551 is 0 bytes after a block of size 17 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== 
-==2445== 1 errors in context 9 of 14:
-==2445== Invalid write of size 1
-==2445==    at 0x483F0BE: strcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B69B: newNode (lfucache.c:22)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c5a0 is 0 bytes after a block of size 0 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B665: newNode (lfucache.c:21)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== 
-==2445== 1 errors in context 10 of 14:
-==2445== Invalid write of size 1
-==2445==    at 0x483F0BE: strcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B651: newNode (lfucache.c:20)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445==  Address 0x4a9c551 is 0 bytes after a block of size 17 alloc'd
-==2445==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==2445==    by 0x484B618: newNode (lfucache.c:19)
-==2445==    by 0x484B713: addTree (lfucache.c:34)
-==2445==    by 0x484B796: addTree (lfucache.c:36)
-==2445==    by 0x484C34E: openFile (lfucache.c:240)
-==2445==    by 0x484CB5C: writeFile (lfucache.c:343)
-==2445==    by 0x10BB9B: operation (server.c:281)
-==2445==    by 0x10CBA2: readValue (server.c:467)
-==2445==    by 0x4860608: start_thread (pthread_create.c:477)
-==2445==    by 0x499A132: clone (clone.S:95)
-==2445== 
-==2445== ERROR SUMMARY: 14 errors from 14 contexts (suppressed: 0 from 0)
+==315== Memcheck, a memory error detector
+==315== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==315== Using Valgrind-3.15.0-608cb11914-20190413 and LibVEX; rerun with -h for copyright info
+==315== Command: ./server
+==315== Parent PID: 314
+==315== 
+--315-- 
+--315-- Valgrind options:
+--315--    --leak-check=full
+--315--    --show-leak-kinds=all
+--315--    --track-origins=yes
+--315--    --verbose
+--315--    --log-file=valgrind-out.txt
+--315-- Contents of /proc/version:
+--315--   Linux version 4.4.0-22000-Microsoft (Microsoft@Microsoft.com) (gcc version 5.4.0 (GCC) ) #653-Microsoft Wed Apr 27 16:06:00 PST 2022
+--315-- 
+--315-- Arch and hwcaps: AMD64, LittleEndian, amd64-cx16-lzcnt-rdtscp-sse3-ssse3-avx-avx2-bmi-f16c-rdrand
+--315-- Page sizes: currently 4096, max supported 4096
+--315-- Valgrind library directory: /usr/lib/x86_64-linux-gnu/valgrind
+--315-- Reading syms from /mnt/c/Users/feder/OneDrive - University of Pisa/Documenti/GitHub/SOLProject/server
+--315-- Reading syms from /usr/lib/x86_64-linux-gnu/ld-2.31.so
+--315--   Considering /usr/lib/debug/.build-id/45/87364908de169dec62ffa538170118c1c3a078.debug ..
+--315--   .. build-id is valid
+--315-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/memcheck-amd64-linux
+--315--    object doesn't have a symbol table
+--315--    object doesn't have a dynamic symbol table
+--315-- Scheduler: using generic scheduler lock implementation.
+--315-- Reading suppressions file: /usr/lib/x86_64-linux-gnu/valgrind/default.supp
+==315== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-315-by-federico-on-???
+==315== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-315-by-federico-on-???
+==315== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-315-by-federico-on-???
+==315== 
+==315== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==315== don't want to do, unless you know exactly what you're doing,
+==315== or are doing some strange experiment):
+==315==   /usr/lib/x86_64-linux-gnu/valgrind/../../bin/vgdb --pid=315 ...command...
+==315== 
+==315== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==315==   /path/to/gdb ./server
+==315== and then give GDB the following command
+==315==   target remote | /usr/lib/x86_64-linux-gnu/valgrind/../../bin/vgdb --pid=315
+==315== --pid is optional if only one valgrind process is running
+==315== 
+==315== error calling PR_SET_PTRACER, vgdb might block
+--315-- REDIR: 0x4022e20 (ld-linux-x86-64.so.2:strlen) redirected to 0x580c9ce2 (???)
+--315-- REDIR: 0x4022bf0 (ld-linux-x86-64.so.2:index) redirected to 0x580c9cfc (???)
+--315-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_core-amd64-linux.so
+--315--    object doesn't have a symbol table
+--315-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so
+--315--    object doesn't have a symbol table
+==315== WARNING: new redirection conflicts with existing -- ignoring it
+--315--     old: 0x04022e20 (strlen              ) R-> (0000.0) 0x580c9ce2 ???
+--315--     new: 0x04022e20 (strlen              ) R-> (2007.0) 0x0483f060 strlen
+--315-- REDIR: 0x401f600 (ld-linux-x86-64.so.2:strcmp) redirected to 0x483ffd0 (strcmp)
+--315-- REDIR: 0x4023380 (ld-linux-x86-64.so.2:mempcpy) redirected to 0x4843a20 (mempcpy)
+--315-- Reading syms from /mnt/c/Users/feder/OneDrive - University of Pisa/Documenti/GitHub/SOLProject/libs/libtree.so
+--315-- Reading syms from /usr/lib/x86_64-linux-gnu/libpthread-2.31.so
+--315--   Considering /usr/lib/debug/.build-id/7b/4536f41cdaa5888408e82d0836e33dcf436466.debug ..
+--315--   .. build-id is valid
+--315-- Reading syms from /usr/lib/x86_64-linux-gnu/libc-2.31.so
+--315--   Considering /usr/lib/debug/.build-id/18/78e6b475720c7c51969e69ab2d276fae6d1dee.debug ..
+--315--   .. build-id is valid
+--315-- REDIR: 0x491b480 (libc.so.6:memmove) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a780 (libc.so.6:strncpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b7b0 (libc.so.6:strcasecmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a0a0 (libc.so.6:strcat) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a7e0 (libc.so.6:rindex) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491cc50 (libc.so.6:rawmemchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x4937ce0 (libc.so.6:wmemchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x4937820 (libc.so.6:wcscmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b5e0 (libc.so.6:mempcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b410 (libc.so.6:bcmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a710 (libc.so.6:strncmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a150 (libc.so.6:strcmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b540 (libc.so.6:memset) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x49377e0 (libc.so.6:wcschr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a670 (libc.so.6:strnlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a230 (libc.so.6:strcspn) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b800 (libc.so.6:strncasecmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a1d0 (libc.so.6:strcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b950 (libc.so.6:memcpy@@GLIBC_2.14) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x4938f50 (libc.so.6:wcsnlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x4937860 (libc.so.6:wcscpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a820 (libc.so.6:strpbrk) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a100 (libc.so.6:index) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491a630 (libc.so.6:strlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x4923bb0 (libc.so.6:memrchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b850 (libc.so.6:strcasecmp_l) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b3d0 (libc.so.6:memchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x4937930 (libc.so.6:wcslen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491aae0 (libc.so.6:strspn) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b750 (libc.so.6:stpncpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b6f0 (libc.so.6:stpcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491cc90 (libc.so.6:strchrnul) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x491b8a0 (libc.so.6:strncasecmp_l) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x4a03500 (libc.so.6:__strrchr_avx2) redirected to 0x483ea10 (rindex)
+--315-- REDIR: 0x49150e0 (libc.so.6:malloc) redirected to 0x483b780 (malloc)
+--315-- REDIR: 0x4a06b60 (libc.so.6:__memset_avx2_unaligned_erms) redirected to 0x48428e0 (memset)
+--315-- REDIR: 0x4a036d0 (libc.so.6:__strlen_avx2) redirected to 0x483ef40 (strlen)
+--315-- REDIR: 0x4a04fa0 (libc.so.6:__strncpy_avx2) redirected to 0x483f230 (strncpy)
+--315-- REDIR: 0x4a03310 (libc.so.6:__strchrnul_avx2) redirected to 0x4843540 (strchrnul)
+--315-- REDIR: 0x4a066c0 (libc.so.6:__mempcpy_avx_unaligned_erms) redirected to 0x4843660 (mempcpy)
+--315-- REDIR: 0x491afa0 (libc.so.6:__GI_strstr) redirected to 0x4843ca0 (__strstr_sse2)
+--315-- REDIR: 0x49ff530 (libc.so.6:__memchr_avx2) redirected to 0x4840050 (memchr)
+--315-- REDIR: 0x4a066e0 (libc.so.6:__memcpy_avx_unaligned_erms) redirected to 0x48429f0 (memmove)
+--315-- REDIR: 0x4a030e0 (libc.so.6:__strchr_avx2) redirected to 0x483ebf0 (index)
+--315-- REDIR: 0x49feaa0 (libc.so.6:__strspn_sse42) redirected to 0x4843ef0 (strspn)
+--315-- REDIR: 0x49fe820 (libc.so.6:__strcspn_sse42) redirected to 0x4843e10 (strcspn)
+--315-- REDIR: 0x49156d0 (libc.so.6:free) redirected to 0x483c9d0 (free)
+--315-- REDIR: 0x4916b10 (libc.so.6:calloc) redirected to 0x483dce0 (calloc)
+--315-- REDIR: 0x49febd0 (libc.so.6:__strcmp_avx2) redirected to 0x483fed0 (strcmp)
+--315-- REDIR: 0x4915e80 (libc.so.6:realloc) redirected to 0x483df30 (realloc)
+--315-- REDIR: 0x491a6b0 (libc.so.6:strncat) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--315-- REDIR: 0x4a04200 (libc.so.6:__strncat_avx2) redirected to 0x483ede0 (strncat)
+--315-- Reading syms from /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+--315--    object doesn't have a symbol table
+--315-- Discarding syms at 0x5e745e0-0x5e85045 in /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (have_dinfo 1)
+==315== 
+==315== HEAP SUMMARY:
+==315==     in use at exit: 155 bytes in 3 blocks
+==315==   total heap usage: 81 allocs, 78 frees, 2,780,791 bytes allocated
+==315== 
+==315== Searching for pointers to 3 not-freed blocks
+==315== Checked 89,656 bytes
+==315== 
+==315== 8 bytes in 1 blocks are indirectly lost in loss record 1 of 3
+==315==    at 0x483DFAF: realloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==315==    by 0x484C7BF: appendToFile (lfucache.c:306)
+==315==    by 0x484C9C6: writeFile (lfucache.c:325)
+==315==    by 0x10BB4A: operation (server.c:266)
+==315==    by 0x10C991: readValue (server.c:448)
+==315==    by 0x4860608: start_thread (pthread_create.c:477)
+==315==    by 0x499A132: clone (clone.S:95)
+==315== 
+==315== 91 bytes in 1 blocks are indirectly lost in loss record 2 of 3
+==315==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==315==    by 0x484B4D0: __builtin_alloca (utils.h:208)
+==315==    by 0x484B5CB: newNode (lfucache.c:14)
+==315==    by 0x484B6B9: addTree (lfucache.c:29)
+==315==    by 0x484B70A: addTree (lfucache.c:30)
+==315==    by 0x484B73C: addTree (lfucache.c:31)
+==315==    by 0x484B73C: addTree (lfucache.c:31)
+==315==    by 0x484C150: openFile (lfucache.c:216)
+==315==    by 0x484C9A1: writeFile (lfucache.c:322)
+==315==    by 0x10BB4A: operation (server.c:266)
+==315==    by 0x10C991: readValue (server.c:448)
+==315==    by 0x4860608: start_thread (pthread_create.c:477)
+==315== 
+==315== 155 (56 direct, 99 indirect) bytes in 1 blocks are definitely lost in loss record 3 of 3
+==315==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==315==    by 0x484B4D0: __builtin_alloca (utils.h:208)
+==315==    by 0x484B5A6: newNode (lfucache.c:12)
+==315==    by 0x484B6B9: addTree (lfucache.c:29)
+==315==    by 0x484B70A: addTree (lfucache.c:30)
+==315==    by 0x484B73C: addTree (lfucache.c:31)
+==315==    by 0x484B73C: addTree (lfucache.c:31)
+==315==    by 0x484C150: openFile (lfucache.c:216)
+==315==    by 0x484C9A1: writeFile (lfucache.c:322)
+==315==    by 0x10BB4A: operation (server.c:266)
+==315==    by 0x10C991: readValue (server.c:448)
+==315==    by 0x4860608: start_thread (pthread_create.c:477)
+==315== 
+==315== LEAK SUMMARY:
+==315==    definitely lost: 56 bytes in 1 blocks
+==315==    indirectly lost: 99 bytes in 2 blocks
+==315==      possibly lost: 0 bytes in 0 blocks
+==315==    still reachable: 0 bytes in 0 blocks
+==315==         suppressed: 0 bytes in 0 blocks
+==315== 
+==315== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)

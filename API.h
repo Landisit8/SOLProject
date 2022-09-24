@@ -1,17 +1,10 @@
 #if !defined(API_H_)
 #define API_H_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <time.h>
-#include <unistd.h>
 #include <assert.h>
 #include <getopt.h>
-
-#include <sys/socket.h>
-#include <sys/un.h>
+#include <time.h>
+#include <dirent.h>
 
 /**
  *	\ Viene aperta una connessione AF_UNIX al socket file "sockname" attraverso il file di config
@@ -51,14 +44,12 @@ int readFile(const char* pathname, void** buf, size_t* size);
 int readNFiles(int N, const char* dirname);
 
 /**
- *	\
-     \
+ *	\Funzione aggiuntiva per Leggere un file nella memoria secondaria
 */
 char* readBytes(const char* name, long* filelen);
 
 /**
- *	\
-     \
+ *	\Funzione aggiuntiva per scrivere un file nella memoria secondaria
 */
 int writeBytes(const char* name, char* text, long size, const char* dirname);
 
@@ -102,8 +93,8 @@ int closeFile(const char* pathname);
 int removeFile(const char* pathname);
 
 /**
- *	\ 
- *	\ 
+ *	\ Setta il valore del -p 
+ *	\ permette di stampare i messaggi in schermo
 */
 void set_p();
 #endif //

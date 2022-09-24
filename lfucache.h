@@ -3,17 +3,22 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <utils.h>
+#include <assert.h>
+#include <string.h>
+#include <assert.h>
+#include <ctype.h>
+#include <signal.h>
+#include <sys/select.h>
 
 //	struttura dati per l'albero
 typedef struct tree{
 	int freq;				//	frequenza, il numero di volte che un file viene fatta una qualsiasi operazione
-	char* nome;		
-	char* testo;
+	char* nome;				//	nome del file
+	char* testo;			//	testo del file
 	int stato;				//	stato, indica se un file e' chiuso(1) o aperto(0)
 	int lucchetto;			//	lucchetto, indica se un file è lock(0) or unlock(1)
-	pid_t sLock;
+	pid_t sLock;			//	pid del server
 	struct tree *left;
 	struct tree *right;
 } nodo;
@@ -66,7 +71,7 @@ nodo* searchLeaf (nodo* n);
  * \si scambia con il nodo con la frequenza minima trovata con la foglia e si cancella la foglia 
  * \return n ok  NULL non esiste l'albero   
 */
-int lfuRemove(nodo* n, msg_t* text);
+int lfuRemove(nodo* n, msg_t** text);
 
 /** 
  * \cerca il nome nel nodo poi si cerca una foglia qualsisi e con le considerazioni della funzione searchLeaf
@@ -105,29 +110,41 @@ int changeLock(nodo* root, char* name, int lb, pid_t cLock);
 int openFile(nodo* root, char* name, int flags, pid_t cLock);
 
 /** 
- * \
- * \ 
+ * \ se supero tutti i controlli
+ * \ copio l'elemento e lo salvo
+ * \return 0 se andrà tutto bene, negativo altrimenti
 */
-int readFile(nodo* root, char* name, msg_t* text, pid_t cLock);
+int readFile(nodo* root, char* name, msg_t** text, pid_t cLock);
 
 /** 
- * \
- * \ 
+ * \ se supero tutti i controlli
+ * \ copio gli l'elementi e li salvo
+ * \return 0 se andrà tutto bene, negativo altrimenti
 */
 void readsFile(nodo* root, int n, pid_t cLock, msg_l* buffer);
 
 /** 
- * \
- * \ 
+ * \ Scrivo sul testo di un file il suo contenuto
+ * \return 0 se andrà tutto bene, negativo altrimenti
 */
 int appendToFile(nodo* root, char* name, char* text, pid_t cLock);
 
 /** 
- * \
- * \ 
+ * \ Cerco se il file esiste, se esiste, append, oppure lo creo e poi faccio append
+  * \return 0 se andrà tutto bene, negativo altrimenti
 */
 int writeFile(nodo* root, char* name, char* text, pid_t cLock);
 
+/**
+ * Funzione di stampa
+ * per sviluppatori 
+ */
 void print (nodo* n);
+
+/** 
+ * \ finito le operazioni, cancello l'albero
+  * \return l'albero cancellato
+*/
+void cleanTree (nodo* root);
 
 #endif // 
