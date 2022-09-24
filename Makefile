@@ -26,7 +26,6 @@ server: server.c libs/libtree.so libs/libapi.so
 client: client.c libs/libtree.so libs/libapi.so
 	$(CC) $(CFLAGS) $(INCLUDES) client.c -o client -Wl,-rpath,./libs -L ./libs -lapi
 
-
 libs/libtree.so: lfucache.o
 	$(CC) -shared -o libs/libtree.so $^
 lfucache.o:
