@@ -14,6 +14,7 @@ nodo* newNode (int freq, char* nome, char* testo, int stato, int lock)
 	nodo* new;
 	new = alloca(sizeof(nodo));
 	new->freq = freq;
+	new->ord = ordine;
 	new->nome = alloca(strlen(nome) + 1);
 	strncpy(new->nome, nome, (strlen(nome)) + 1);
 	new->testo = alloca(strlen(testo) + 1);
@@ -199,8 +200,52 @@ int lfuRemove(nodo* n, msg_t** text)
 	return 0;
 }
 
+nodo* findTreeOrd(nodo* root, int* min, char** name){
+	if (root == NULL)	return NULL;
+	if (strcmp(root->nome, "pRoot") != 0) {
+		if (*min > (root->freq))	
+		{
+			*min = root->freq;
+			strncpy(*name,root->nome, strlen(root->nome) + 1); 
+		}
+	}
+	findTreeOrd(root->left,min,name);
+	findTreeOrd(root->right,min,name);
+
+	return root;
+}
+
 int fifoRemove(nodo* root, msg_t** text)
 {
+	if (root == NULL)	return -3;
+	if (root->left == NULL && root->right == NULL)	return -1;
+	int min;
+	char* name = alloca(MAXS*sizeof(char));
+
+	if (root->left == NULL){	min = root->right->freq;	name = root->right->nome; }
+	else { min = root->left->freq;	name = root->left->nome; }
+	
+	nodo* find = NULL;
+	nodo* leaf = NULL;
+	
+	//	cerco il nodo con l'ordine minimo e trovo il nome
+	if (!findTreeOrd(root,&min,&name))	return -3;
+
+	// cerco il nodo dal nome del nodo minimo e ottengo un riferimento
+	if (!(find = findTreeFromName(root,name)))	return -3;
+
+	//carico gli elementi in "text" per caricarlo nella cartella apposita
+	*text = alloca(sizeof(msg_t));
+	strncpy((*text)->str,find->testo, strlen(find->testo));
+	(*text)->lStr = strlen(find->testo);
+	strncpy((*text)->nome,find->nome, strlen(find->nome));
+	(*text)->lNome = strlen(find->nome);
+
+	//	cerco una foglia generica
+	if (!(leaf = searchLeaf(root)))	return -3;
+
+	if (swapTree(leaf, find) != 0)	return -1;
+	free(leaf);
 	return 0;
 }
 

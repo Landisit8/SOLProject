@@ -75,10 +75,10 @@ nodo* searchLeaf (nodo* n);
 int lfuRemove(nodo* n, msg_t** text);
 
 /** 
- * \
- * \
- * \
- * \return   
+ * \ 2° tipologia di politica di estrazione di un file
+ * \ ricavo il valore minimo dall'ordine di inserimento nell'albero
+ * \ trovo la prima folgia disponibile e scambio i 2 valori.
+ * \return la risposta, 0 ok -1 errore
 */
 int fifoRemove(nodo* root, msg_t** text);
 
