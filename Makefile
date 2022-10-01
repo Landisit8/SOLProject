@@ -46,3 +46,7 @@ test1: all
 	./test/test1.sh
 test2: all
 	./test/test2.sh
+test2FIFO: all
+	./test/test2FIFO.sh
+test3: all
+	./test/test3.sh

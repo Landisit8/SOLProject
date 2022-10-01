@@ -122,7 +122,7 @@ int parsing (int n, char** valori){
 	struct timespec abstime;
 	int opt;
 	int r;
-	int p;
+	int p = 0;
 	size_t sz;
 	long num = 0;
 	long nume = -1;
@@ -185,7 +185,6 @@ int parsing (int n, char** valori){
 				{
 					file = alloca(strlen(token) + 1);
 					strncpy(file, token, strlen(token) + 1);
-					file[strlen(token) + 1] = '\0';
 					if (cartellaEspulsi)
 						r = writeFile(file, cartellaEspulsi);
 					//printf("valore di r: %d\n", r);
@@ -196,6 +195,7 @@ int parsing (int n, char** valori){
 						perror("ERROR: write to file");
 					}
 					token = strtok(NULL, ",");
+					free(file);
 				}
 			break;
 			case 'D':
@@ -300,7 +300,11 @@ int main(int argc, char* argv[])
 	if(closeConnection(SOCKET) != 0)
     {
         perror("ERROR: Unable to close connection correctly with server");
+		free(SOCKET);
         exit(EXIT_FAILURE);
     }
+	free(cartellaEspulsi);
+	free(cartellaLettura);
+	free(SOCKET);
 	return 0;
 }

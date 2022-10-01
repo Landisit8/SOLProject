@@ -53,9 +53,11 @@ int closeConnection(const char* sockname){
 	if (writen(sockfd,sockClose,sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERROR: Messaggio non inviato al server");
+		free(sockClose);
 		return -1;
 	}
 
+	free(sockClose);
 	int ris = 0;
 
 	// ricevo risposta dal server
@@ -101,7 +103,10 @@ int openFile(const char* pathname, int flags)
 	if (writen(sockfd, open, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: scrittura openFile");
+		free(open);
 	}
+
+	free(open);
 
 	//	ricevo il messaggio dal server
 	msg_t tmp;
@@ -176,15 +181,18 @@ int writeBytes(const char* name, char* text, long size, const char* dirname)
 {
 	FILE *file;
 	errno = 0;
-	char* path = alloca(strlen(dirname) + strlen(name) + 1);
+	char* path = alloca(strlen(dirname) + strlen(name) + 2);
 
 	sprintf(path, "%s/%s", dirname, name);
 	path[strlen (dirname) + strlen(name) + 1] = '\0';
 	errno = 0;
 	if ((file = fopen(path, "wb")) == NULL){
 		fprintf(stderr, "errno:%d\n", errno);
+		free(path);
 		return -1;
 	}
+
+	free(path);
 
 	if ((fwrite(text, sizeof(char), size, file)) != size)	return -1;
 
@@ -216,8 +224,11 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	if (writen(sockfd, read, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: scrittura readFile");
+		free(read);
 		return -1;
 	}
+
+	free(read);
 
 	//	ricevo il messaggio dal server
 	msg_t* tmp = alloca(sizeof(msg_t));
@@ -237,6 +248,7 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	char *tmp_buf = alloca((*size));
 	strncpy(tmp_buf, tmp->str, tmp->lStr);
 	*buf = (void*)tmp_buf;
+	free(tmp);
 	return 0;
 }
 
@@ -259,8 +271,12 @@ int readNFiles(int N, const char* dirname){
 	if (writen(sockfd, reads, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: scrittura readsFile\n");
+		free(reads);
 		return -1;
 	}
+
+	free(reads);
+
 	msg_t tmp;
 	do{
 		//	ricevo il messaggio dal server
@@ -318,6 +334,7 @@ int writeFile(const char* pathname, const char* dirname)
 	}
 
 	memcpy(write->str, buf, fileLen);
+	free(buf);
 	write->lStr = fileLen;
 	write->cLock = getpid();
 	
@@ -325,14 +342,18 @@ int writeFile(const char* pathname, const char* dirname)
 	if (writen(sockfd, write, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: scrittura readFile");
+		free(write);
 		return -1;
 	}
+
+	free(write);
 
 	//	ricevo il messaggio dal server
 	msg_t* tmp = alloca(sizeof(msg_t));
 	if (readn(sockfd, tmp, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: lettura risposta writeFile");
+		free(tmp);
 	}
 	// stampo i/il messaggio/i
 	if (p){
@@ -340,9 +361,10 @@ int writeFile(const char* pathname, const char* dirname)
 		stampaOp(tmp->op);
 	}
 
-	if (tmp->op == OP_OK)
-	return 0;
-	
+	if (tmp->op == OP_OK){
+		free(tmp);
+		return 0;
+	}
 	if (tmp->op == OP_LFU){
 		char *nome = strrchr(tmp->nome, '/');
 		nome++; 
@@ -350,6 +372,7 @@ int writeFile(const char* pathname, const char* dirname)
 		writeFile(pathname,dirname);
 	}
 
+	free(tmp);
 	return -1;
 }
 
@@ -374,8 +397,11 @@ int appendToFile(const char* pathname, void* buf, size_t size, const char* dirna
 	if (writen(sockfd, append, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: scrittura readFile");
+		free(append);
 		return -1;
 	}
+
+	free(append);
 
 	// ricevo il messaggio dal server
 	msg_t tmp;
@@ -423,8 +449,11 @@ int lockFile(const char* pathname)
 	if (writen(sockfd, lock, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: scrittura lockFile");
+		free(lock);
 		return -1;
 	}
+
+	free(lock);
 
 	//	ricevo il messaggio dal server
 	msg_t tmp;
@@ -462,8 +491,11 @@ int unlockFile(const char* pathname)
 	if (writen(sockfd, unlock, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: scrittura lockFile");
+		free(unlock);
 		return -1;
 	}
+
+	free(unlock);
 
 	//	ricevo il messaggio dal server
 	msg_t tmp;
@@ -501,8 +533,11 @@ int closeFile(const char* pathname)
 	if (writen(sockfd, close, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: scrittura lockFile");
+		free(close);
 		return -1;
 	}
+
+	free(close);
 
 	//	ricevo il messaggio dal server
 	msg_t tmp;
@@ -538,8 +573,11 @@ int removeFile(const char* pathname)
 	if (writen(sockfd, remove, sizeof(msg_t)) <= 0){
 		errno = -1;
 		perror("ERRORE: scrittura lockFile");
+		free(remove);
 		return -1;
 	}
+
+	free(remove);
 
 	//	ricevo il messaggio dal server
 	msg_t tmp;

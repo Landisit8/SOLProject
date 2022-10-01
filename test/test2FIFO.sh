@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Test2:"; 
+echo "Sto eseguendo test2..."; 
 echo -e "numeroThread=4;\nmemoriaMassima=1;\nnumerofile=10;\nsocket=./canale;\nfileLogName=logFile;\npolitica=FIFO;" > ./setup/config.txt
 
 ./server &

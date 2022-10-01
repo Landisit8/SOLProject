@@ -724,15 +724,6 @@ int main(int argc, char *argv[])
 	}
 	// Chiusura server
 	pthread_join(signal_handler, NULL);
-	close(fd);
-	unlink(sktname);
-	free(sktname);
-	fclose(log_file);
-	free(fileLogName);
-	free(politica);
-	free(thr);
-	msgClean(attesa);
-	cleanTree(pRoot);
 	// Stampe chiusura server
 	fprintf(stdout, "\nNumero di file memorizzati nel server: %d\n", contNum);
 	fprintf(stdout, "Dimensione massima (Mbytes) raggiunta: %d\n", contMemMax);
@@ -742,6 +733,15 @@ int main(int argc, char *argv[])
 		fprintf(stdout, "Puoi ancora salvare nel server: 0 File\n");
 	
 	fprintf(stdout, "Numero file vittima: %d\n", contVitt);
-	fprintf(stdout, "Memoria cache liberata da: %d File\n", contNum-contEnd);
+	fprintf(stdout, "Memoria cache liberata da: %d File\n\n", contNum-contEnd);
+	close(fd);
+	unlink(sktname);
+	free(sktname);
+	fclose(log_file);
+	free(fileLogName);
+	free(politica);
+	free(thr);
+	msgClean(attesa);
+	cleanTree(pRoot);
 	pthread_exit(NULL);
 }

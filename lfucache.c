@@ -75,12 +75,15 @@ int swapTree (nodo* a, nodo* b)
 	nodo* tmp = newNode(a->freq, a->nome, a->testo, a->stato, a->lucchetto);
 
 	a->freq = b->freq;
+	free(a->nome);
+	a->nome = alloca(strlen(b->nome) + 1);
 	strncpy(a->nome, b->nome, strlen(b->nome) + 1);
+	free(a->testo);
+	a->testo = alloca(strlen(b->testo) + 1);
 	strncpy(a->testo, b->testo, strlen(b->testo) + 1);
 	a->stato = b->stato;
 
 	b->freq = tmp->freq;
-
 	free(b->nome);
 	b->nome = alloca(strlen(tmp->nome) + 1);
 	strncpy(b->nome, tmp->nome, strlen(tmp->nome));
@@ -171,8 +174,9 @@ int lfuRemove(nodo* n, msg_t** text)
 	if (n == NULL)	return -3;
 	if (n->left == NULL && n->right == NULL)	return -1;
 	int min;
-	char* name = alloca(MAXS*sizeof(char));
+	char* name;
 
+	//	Prendo la prima informazione disponibile
 	if (n->left == NULL){	min = n->right->freq;	name = n->right->nome; }
 	else { min = n->left->freq;	name = n->left->nome; }
 	
@@ -196,6 +200,8 @@ int lfuRemove(nodo* n, msg_t** text)
 	if (!(leaf = searchLeaf(n)))	return -3;
 
 	if (swapTree(leaf, find) != 0)	return -1;
+	free(leaf->nome);
+	free(leaf->testo);
 	free(leaf);
 	return 0;
 }
@@ -203,9 +209,9 @@ int lfuRemove(nodo* n, msg_t** text)
 nodo* findTreeOrd(nodo* root, int* min, char** name){
 	if (root == NULL)	return NULL;
 	if (strcmp(root->nome, "pRoot") != 0) {
-		if (*min > (root->freq))	
+		if (*min > (root->ord))	
 		{
-			*min = root->freq;
+			*min = root->ord;
 			strncpy(*name,root->nome, strlen(root->nome) + 1); 
 		}
 	}
@@ -220,10 +226,10 @@ int fifoRemove(nodo* root, msg_t** text)
 	if (root == NULL)	return -3;
 	if (root->left == NULL && root->right == NULL)	return -1;
 	int min;
-	char* name = alloca(MAXS*sizeof(char));
+	char* name;
 
-	if (root->left == NULL){	min = root->right->freq;	name = root->right->nome; }
-	else { min = root->left->freq;	name = root->left->nome; }
+	if (root->left == NULL){	min = root->right->ord;	name = root->right->nome; }
+	else { min = root->left->ord;	name = root->left->nome; }
 	
 	nodo* find = NULL;
 	nodo* leaf = NULL;
@@ -245,6 +251,8 @@ int fifoRemove(nodo* root, msg_t** text)
 	if (!(leaf = searchLeaf(root)))	return -3;
 
 	if (swapTree(leaf, find) != 0)	return -1;
+	free(leaf->nome);
+	free(leaf->testo);
 	free(leaf);
 	return 0;
 }
@@ -416,13 +424,19 @@ int fileRemove(nodo* root, char* nome, pid_t cLock)
 
 	if (!(leaf = searchLeaf(root)))	return -3;
 
-	if (swapTree(leaf, find) != 0)	return -1;
-
-	free(leaf->nome);
-	free(leaf->testo);
-	free(leaf);
-	addFrequenza(find->freq);
-	return 0;
+	if ((strcmp((leaf->nome), (find->nome))) == 0){
+		free(leaf->nome);
+		free(leaf->testo);
+		free(leaf);
+		return 0;
+	} else if (swapTree(leaf, find) == 0){
+		free(leaf->nome);
+		free(leaf->testo);
+		free(leaf);
+		addFrequenza(find->freq);
+		return 0;
+	}	
+	return -1;
 }
 
 //	cambia lo stato del nodo (0 aperto - 1 chiuso)
