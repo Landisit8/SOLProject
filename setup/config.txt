@@ -1,5 +1,6 @@
-numeroThread=8;
-memoriaMassima=32;
-numerofile=100;
+numeroThread=4;
+memoriaMassima=1;
+numerofile=10;
 socket=./canale;
 fileLogName=logFile;
+politica=LFU;

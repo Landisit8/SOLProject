@@ -361,15 +361,16 @@ int writeFile(const char* pathname, const char* dirname)
 		stampaOp(tmp->op);
 	}
 
-	if (tmp->op == OP_OK){
-		free(tmp);
-		return 0;
-	}
 	if (tmp->op == OP_LFU){
 		char *nome = strrchr(tmp->nome, '/');
 		nome++; 
 		writeBytes(nome,tmp->str,tmp->lStr,"./LFU");
 		writeFile(pathname,dirname);
+	}
+
+	if (tmp->op == OP_OK){
+		free(tmp);
+		return 0;
 	}
 
 	free(tmp);

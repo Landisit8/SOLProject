@@ -315,6 +315,7 @@ static inline void msgClean(msg_l* list)
     free(list);
     return;
 }
+
 /**
  * Stampa della risposta dal server
  */

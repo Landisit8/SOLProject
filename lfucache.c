@@ -424,7 +424,7 @@ int fileRemove(nodo* root, char* nome, pid_t cLock)
 
 	if (!(leaf = searchLeaf(root)))	return -3;
 
-	if ((strcmp((leaf->nome), (find->nome))) == 0){
+	if ((strlen(find->nome) == strlen(leaf->nome)) && (strlen(find->testo) == strlen(leaf->testo))){
 		free(leaf->nome);
 		free(leaf->testo);
 		free(leaf);

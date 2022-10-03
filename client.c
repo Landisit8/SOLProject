@@ -3,6 +3,7 @@
 #include <utils.h>
 #include <conn.h>
 #include <ops.h>
+#include <utilslist.h>
 
 #define MAX 2048
 
@@ -133,6 +134,7 @@ int parsing (int n, char** valori){
 	char* nome;
 	char* dirname;
 	void* buf = NULL;
+	
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1){
 		switch(opt) 
