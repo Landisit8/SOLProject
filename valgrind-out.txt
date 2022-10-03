@@ -1,193 +1,192 @@
-==224== Memcheck, a memory error detector
-==224== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==224== Using Valgrind-3.15.0-608cb11914-20190413 and LibVEX; rerun with -h for copyright info
-==224== Command: ./client -p -f ./canale -D ./LFU -W ./file/nico.txt -W ./file/salvini.txt
-==224== Parent PID: 213
-==224== 
---224-- 
---224-- Valgrind options:
---224--    --leak-check=full
---224--    --show-leak-kinds=all
---224--    --track-origins=yes
---224--    --verbose
---224--    --log-file=valgrind-out.txt
---224-- Contents of /proc/version:
---224--   Linux version 4.4.0-22000-Microsoft (Microsoft@Microsoft.com) (gcc version 5.4.0 (GCC) ) #653-Microsoft Wed Apr 27 16:06:00 PST 2022
---224-- 
---224-- Arch and hwcaps: AMD64, LittleEndian, amd64-cx16-lzcnt-rdtscp-sse3-ssse3-avx-avx2-bmi-f16c-rdrand
---224-- Page sizes: currently 4096, max supported 4096
---224-- Valgrind library directory: /usr/lib/x86_64-linux-gnu/valgrind
---224-- Reading syms from /mnt/c/Users/feder/OneDrive - University of Pisa/Documenti/GitHub/SOLProject/client
---224-- Reading syms from /usr/lib/x86_64-linux-gnu/ld-2.31.so
---224--   Considering /usr/lib/debug/.build-id/45/87364908de169dec62ffa538170118c1c3a078.debug ..
---224--   .. build-id is valid
---224-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/memcheck-amd64-linux
---224--    object doesn't have a symbol table
---224--    object doesn't have a dynamic symbol table
---224-- Scheduler: using generic scheduler lock implementation.
---224-- Reading suppressions file: /usr/lib/x86_64-linux-gnu/valgrind/default.supp
-==224== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-224-by-federico-on-???
-==224== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-224-by-federico-on-???
-==224== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-224-by-federico-on-???
-==224== 
-==224== TO CONTROL THIS PROCESS USING vgdb (which you probably
-==224== don't want to do, unless you know exactly what you're doing,
-==224== or are doing some strange experiment):
-==224==   /usr/lib/x86_64-linux-gnu/valgrind/../../bin/vgdb --pid=224 ...command...
-==224== 
-==224== TO DEBUG THIS PROCESS USING GDB: start GDB like this
-==224==   /path/to/gdb ./client
-==224== and then give GDB the following command
-==224==   target remote | /usr/lib/x86_64-linux-gnu/valgrind/../../bin/vgdb --pid=224
-==224== --pid is optional if only one valgrind process is running
-==224== 
-==224== error calling PR_SET_PTRACER, vgdb might block
---224-- REDIR: 0x4022e20 (ld-linux-x86-64.so.2:strlen) redirected to 0x580c9ce2 (???)
---224-- REDIR: 0x4022bf0 (ld-linux-x86-64.so.2:index) redirected to 0x580c9cfc (???)
---224-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_core-amd64-linux.so
---224--    object doesn't have a symbol table
---224-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so
---224--    object doesn't have a symbol table
-==224== WARNING: new redirection conflicts with existing -- ignoring it
---224--     old: 0x04022e20 (strlen              ) R-> (0000.0) 0x580c9ce2 ???
---224--     new: 0x04022e20 (strlen              ) R-> (2007.0) 0x0483f060 strlen
---224-- REDIR: 0x401f600 (ld-linux-x86-64.so.2:strcmp) redirected to 0x483ffd0 (strcmp)
---224-- REDIR: 0x4023380 (ld-linux-x86-64.so.2:mempcpy) redirected to 0x4843a20 (mempcpy)
---224-- Reading syms from /mnt/c/Users/feder/OneDrive - University of Pisa/Documenti/GitHub/SOLProject/libs/libapi.so
---224-- Reading syms from /usr/lib/x86_64-linux-gnu/libc-2.31.so
---224--   Considering /usr/lib/debug/.build-id/18/78e6b475720c7c51969e69ab2d276fae6d1dee.debug ..
---224--   .. build-id is valid
---224-- REDIR: 0x48f9480 (libc.so.6:memmove) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f8780 (libc.so.6:strncpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f97b0 (libc.so.6:strcasecmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f80a0 (libc.so.6:strcat) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f87e0 (libc.so.6:rindex) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48fac50 (libc.so.6:rawmemchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x4915ce0 (libc.so.6:wmemchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x4915820 (libc.so.6:wcscmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f95e0 (libc.so.6:mempcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f9410 (libc.so.6:bcmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f8710 (libc.so.6:strncmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f8150 (libc.so.6:strcmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f9540 (libc.so.6:memset) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x49157e0 (libc.so.6:wcschr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f8670 (libc.so.6:strnlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f8230 (libc.so.6:strcspn) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f9800 (libc.so.6:strncasecmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f81d0 (libc.so.6:strcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f9950 (libc.so.6:memcpy@@GLIBC_2.14) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x4916f50 (libc.so.6:wcsnlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x4915860 (libc.so.6:wcscpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f8820 (libc.so.6:strpbrk) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f8100 (libc.so.6:index) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f8630 (libc.so.6:strlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x4901bb0 (libc.so.6:memrchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f9850 (libc.so.6:strcasecmp_l) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f93d0 (libc.so.6:memchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x4915930 (libc.so.6:wcslen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f8ae0 (libc.so.6:strspn) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f9750 (libc.so.6:stpncpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f96f0 (libc.so.6:stpcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48fac90 (libc.so.6:strchrnul) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f98a0 (libc.so.6:strncasecmp_l) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x48f86b0 (libc.so.6:strncat) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
---224-- REDIR: 0x49e1500 (libc.so.6:__strrchr_avx2) redirected to 0x483ea10 (rindex)
---224-- REDIR: 0x49e16d0 (libc.so.6:__strlen_avx2) redirected to 0x483ef40 (strlen)
---224-- REDIR: 0x49e10e0 (libc.so.6:__strchr_avx2) redirected to 0x483ebf0 (index)
---224-- REDIR: 0x48f30e0 (libc.so.6:malloc) redirected to 0x483b780 (malloc)
---224-- REDIR: 0x49e1310 (libc.so.6:__strchrnul_avx2) redirected to 0x4843540 (strchrnul)
---224-- REDIR: 0x49e46c0 (libc.so.6:__mempcpy_avx_unaligned_erms) redirected to 0x4843660 (mempcpy)
---224-- REDIR: 0x49e4b60 (libc.so.6:__memset_avx2_unaligned_erms) redirected to 0x48428e0 (memset)
---224-- REDIR: 0x49e2fa0 (libc.so.6:__strncpy_avx2) redirected to 0x483f230 (strncpy)
---224-- REDIR: 0x49dcaa0 (libc.so.6:__strspn_sse42) redirected to 0x4843ef0 (strspn)
---224-- REDIR: 0x49dc820 (libc.so.6:__strcspn_sse42) redirected to 0x4843e10 (strcspn)
---224-- REDIR: 0x48f8fa0 (libc.so.6:__GI_strstr) redirected to 0x4843ca0 (__strstr_sse2)
---224-- REDIR: 0x48f36d0 (libc.so.6:free) redirected to 0x483c9d0 (free)
---224-- REDIR: 0x49e46e0 (libc.so.6:__memcpy_avx_unaligned_erms) redirected to 0x48429f0 (memmove)
---224-- REDIR: 0x49e3900 (libc.so.6:__stpcpy_avx2) redirected to 0x4842300 (stpcpy)
-==224== 
-==224== HEAP SUMMARY:
-==224==     in use at exit: 0 bytes in 0 blocks
-==224==   total heap usage: 24 allocs, 24 frees, 589,915 bytes allocated
-==224== 
-==224== All heap blocks were freed -- no leaks are possible
-==224== 
-==224== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
-                                                                                                                                                                 --214-- Reading syms from /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
---214--    object doesn't have a symbol table
-==214== 
-==214== HEAP SUMMARY:
-==214==     in use at exit: 1,654 bytes in 4 blocks
-==214==   total heap usage: 122 allocs, 118 frees, 3,027,142 bytes allocated
-==214== 
-==214== Searching for pointers to 4 not-freed blocks
-==214== Checked 95,360 bytes
-==214== 
-==214== 36 bytes in 1 blocks are still reachable in loss record 1 of 4
-==214==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==214==    by 0x401F5DE: strdup (strdup.c:42)
-==214==    by 0x4019A91: _dl_load_cache_lookup (dl-cache.c:338)
-==214==    by 0x400A989: _dl_map_object (dl-load.c:2102)
-==214==    by 0x4015D46: dl_open_worker (dl-open.c:513)
-==214==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
-==214==    by 0x4015609: _dl_open (dl-open.c:837)
-==214==    by 0x49DB8C0: do_dlopen (dl-libc.c:96)
-==214==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
-==214==    by 0x49DC9F2: _dl_catch_error (dl-error-skeleton.c:227)
-==214==    by 0x49DB9F4: dlerror_run (dl-libc.c:46)
-==214==    by 0x49DB9F4: __libc_dlopen_mode (dl-libc.c:195)
-==214==    by 0x486D9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
-==214== 
-==214== 36 bytes in 1 blocks are still reachable in loss record 2 of 4
-==214==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==214==    by 0x400D5B7: _dl_new_object (dl-object.c:196)
-==214==    by 0x4006E96: _dl_map_object_from_fd (dl-load.c:997)
-==214==    by 0x400A61A: _dl_map_object (dl-load.c:2236)
-==214==    by 0x4015D46: dl_open_worker (dl-open.c:513)
-==214==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
-==214==    by 0x4015609: _dl_open (dl-open.c:837)
-==214==    by 0x49DB8C0: do_dlopen (dl-libc.c:96)
-==214==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
-==214==    by 0x49DC9F2: _dl_catch_error (dl-error-skeleton.c:227)
-==214==    by 0x49DB9F4: dlerror_run (dl-libc.c:46)
-==214==    by 0x49DB9F4: __libc_dlopen_mode (dl-libc.c:195)
-==214==    by 0x486D9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
-==214== 
-==214== 384 bytes in 1 blocks are still reachable in loss record 3 of 4
-==214==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==214==    by 0x401331C: _dl_check_map_versions (dl-version.c:274)
-==214==    by 0x40160FC: dl_open_worker (dl-open.c:577)
-==214==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
-==214==    by 0x4015609: _dl_open (dl-open.c:837)
-==214==    by 0x49DB8C0: do_dlopen (dl-libc.c:96)
-==214==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
-==214==    by 0x49DC9F2: _dl_catch_error (dl-error-skeleton.c:227)
-==214==    by 0x49DB9F4: dlerror_run (dl-libc.c:46)
-==214==    by 0x49DB9F4: __libc_dlopen_mode (dl-libc.c:195)
-==214==    by 0x486D9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
-==214==    by 0x486DC13: _Unwind_ForcedUnwind (unwind-forcedunwind.c:127)
-==214==    by 0x486BF65: __pthread_unwind (unwind.c:121)
-==214== 
-==214== 1,198 bytes in 1 blocks are still reachable in loss record 4 of 4
-==214==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
-==214==    by 0x400D283: _dl_new_object (dl-object.c:89)
-==214==    by 0x4006E96: _dl_map_object_from_fd (dl-load.c:997)
-==214==    by 0x400A61A: _dl_map_object (dl-load.c:2236)
-==214==    by 0x4015D46: dl_open_worker (dl-open.c:513)
-==214==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
-==214==    by 0x4015609: _dl_open (dl-open.c:837)
-==214==    by 0x49DB8C0: do_dlopen (dl-libc.c:96)
-==214==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
-==214==    by 0x49DC9F2: _dl_catch_error (dl-error-skeleton.c:227)
-==214==    by 0x49DB9F4: dlerror_run (dl-libc.c:46)
-==214==    by 0x49DB9F4: __libc_dlopen_mode (dl-libc.c:195)
-==214==    by 0x486D9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
-==214== 
-==214== LEAK SUMMARY:
-==214==    definitely lost: 0 bytes in 0 blocks
-==214==    indirectly lost: 0 bytes in 0 blocks
-==214==      possibly lost: 0 bytes in 0 blocks
-==214==    still reachable: 1,654 bytes in 4 blocks
-==214==         suppressed: 0 bytes in 0 blocks
-==214== 
-==214== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==978== Memcheck, a memory error detector
+==978== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==978== Using Valgrind-3.15.0-608cb11914-20190413 and LibVEX; rerun with -h for copyright info
+==978== Command: ./server
+==978== Parent PID: 976
+==978== 
+--978-- 
+--978-- Valgrind options:
+--978--    --leak-check=full
+--978--    --show-leak-kinds=all
+--978--    --track-origins=yes
+--978--    --verbose
+--978--    --log-file=valgrind-out.txt
+--978-- Contents of /proc/version:
+--978--   Linux version 4.4.0-22000-Microsoft (Microsoft@Microsoft.com) (gcc version 5.4.0 (GCC) ) #653-Microsoft Wed Apr 27 16:06:00 PST 2022
+--978-- 
+--978-- Arch and hwcaps: AMD64, LittleEndian, amd64-cx16-lzcnt-rdtscp-sse3-ssse3-avx-avx2-bmi-f16c-rdrand
+--978-- Page sizes: currently 4096, max supported 4096
+--978-- Valgrind library directory: /usr/lib/x86_64-linux-gnu/valgrind
+--978-- Reading syms from /mnt/c/Users/feder/OneDrive - University of Pisa/Documenti/GitHub/SOLProject/server
+--978-- Reading syms from /usr/lib/x86_64-linux-gnu/ld-2.31.so
+--978--   Considering /usr/lib/debug/.build-id/45/87364908de169dec62ffa538170118c1c3a078.debug ..
+--978--   .. build-id is valid
+--978-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/memcheck-amd64-linux
+--978--    object doesn't have a symbol table
+--978--    object doesn't have a dynamic symbol table
+--978-- Scheduler: using generic scheduler lock implementation.
+--978-- Reading suppressions file: /usr/lib/x86_64-linux-gnu/valgrind/default.supp
+==978== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-978-by-federico-on-???
+==978== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-978-by-federico-on-???
+==978== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-978-by-federico-on-???
+==978== 
+==978== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==978== don't want to do, unless you know exactly what you're doing,
+==978== or are doing some strange experiment):
+==978==   /usr/lib/x86_64-linux-gnu/valgrind/../../bin/vgdb --pid=978 ...command...
+==978== 
+==978== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==978==   /path/to/gdb ./server
+==978== and then give GDB the following command
+==978==   target remote | /usr/lib/x86_64-linux-gnu/valgrind/../../bin/vgdb --pid=978
+==978== --pid is optional if only one valgrind process is running
+==978== 
+==978== error calling PR_SET_PTRACER, vgdb might block
+--978-- REDIR: 0x4022e20 (ld-linux-x86-64.so.2:strlen) redirected to 0x580c9ce2 (???)
+--978-- REDIR: 0x4022bf0 (ld-linux-x86-64.so.2:index) redirected to 0x580c9cfc (???)
+--978-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_core-amd64-linux.so
+--978--    object doesn't have a symbol table
+--978-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so
+--978--    object doesn't have a symbol table
+==978== WARNING: new redirection conflicts with existing -- ignoring it
+--978--     old: 0x04022e20 (strlen              ) R-> (0000.0) 0x580c9ce2 ???
+--978--     new: 0x04022e20 (strlen              ) R-> (2007.0) 0x0483f060 strlen
+--978-- REDIR: 0x401f600 (ld-linux-x86-64.so.2:strcmp) redirected to 0x483ffd0 (strcmp)
+--978-- REDIR: 0x4023380 (ld-linux-x86-64.so.2:mempcpy) redirected to 0x4843a20 (mempcpy)
+--978-- Reading syms from /mnt/c/Users/feder/OneDrive - University of Pisa/Documenti/GitHub/SOLProject/libs/libtree.so
+--978-- Reading syms from /usr/lib/x86_64-linux-gnu/libpthread-2.31.so
+--978--   Considering /usr/lib/debug/.build-id/7b/4536f41cdaa5888408e82d0836e33dcf436466.debug ..
+--978--   .. build-id is valid
+--978-- Reading syms from /usr/lib/x86_64-linux-gnu/libc-2.31.so
+--978--   Considering /usr/lib/debug/.build-id/18/78e6b475720c7c51969e69ab2d276fae6d1dee.debug ..
+--978--   .. build-id is valid
+--978-- REDIR: 0x491c480 (libc.so.6:memmove) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b780 (libc.so.6:strncpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c7b0 (libc.so.6:strcasecmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b0a0 (libc.so.6:strcat) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b7e0 (libc.so.6:rindex) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491dc50 (libc.so.6:rawmemchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x4938ce0 (libc.so.6:wmemchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x4938820 (libc.so.6:wcscmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c5e0 (libc.so.6:mempcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c410 (libc.so.6:bcmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b710 (libc.so.6:strncmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b150 (libc.so.6:strcmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c540 (libc.so.6:memset) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x49387e0 (libc.so.6:wcschr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b670 (libc.so.6:strnlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b230 (libc.so.6:strcspn) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c800 (libc.so.6:strncasecmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b1d0 (libc.so.6:strcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c950 (libc.so.6:memcpy@@GLIBC_2.14) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x4939f50 (libc.so.6:wcsnlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x4938860 (libc.so.6:wcscpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b820 (libc.so.6:strpbrk) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b100 (libc.so.6:index) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491b630 (libc.so.6:strlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x4924bb0 (libc.so.6:memrchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c850 (libc.so.6:strcasecmp_l) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c3d0 (libc.so.6:memchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x4938930 (libc.so.6:wcslen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491bae0 (libc.so.6:strspn) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c750 (libc.so.6:stpncpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c6f0 (libc.so.6:stpcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491dc90 (libc.so.6:strchrnul) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x491c8a0 (libc.so.6:strncasecmp_l) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x4a04500 (libc.so.6:__strrchr_avx2) redirected to 0x483ea10 (rindex)
+--978-- REDIR: 0x49160e0 (libc.so.6:malloc) redirected to 0x483b780 (malloc)
+--978-- REDIR: 0x4a07b60 (libc.so.6:__memset_avx2_unaligned_erms) redirected to 0x48428e0 (memset)
+--978-- REDIR: 0x4a046d0 (libc.so.6:__strlen_avx2) redirected to 0x483ef40 (strlen)
+--978-- REDIR: 0x4a05fa0 (libc.so.6:__strncpy_avx2) redirected to 0x483f230 (strncpy)
+--978-- REDIR: 0x4a04310 (libc.so.6:__strchrnul_avx2) redirected to 0x4843540 (strchrnul)
+--978-- REDIR: 0x4a076c0 (libc.so.6:__mempcpy_avx_unaligned_erms) redirected to 0x4843660 (mempcpy)
+--978-- REDIR: 0x491bfa0 (libc.so.6:__GI_strstr) redirected to 0x4843ca0 (__strstr_sse2)
+--978-- REDIR: 0x4a00530 (libc.so.6:__memchr_avx2) redirected to 0x4840050 (memchr)
+--978-- REDIR: 0x4a076e0 (libc.so.6:__memcpy_avx_unaligned_erms) redirected to 0x48429f0 (memmove)
+--978-- REDIR: 0x4a040e0 (libc.so.6:__strchr_avx2) redirected to 0x483ebf0 (index)
+--978-- REDIR: 0x49ffaa0 (libc.so.6:__strspn_sse42) redirected to 0x4843ef0 (strspn)
+--978-- REDIR: 0x49ff820 (libc.so.6:__strcspn_sse42) redirected to 0x4843e10 (strcspn)
+--978-- REDIR: 0x49166d0 (libc.so.6:free) redirected to 0x483c9d0 (free)
+--978-- REDIR: 0x4917b10 (libc.so.6:calloc) redirected to 0x483dce0 (calloc)
+--978-- REDIR: 0x49ffbd0 (libc.so.6:__strcmp_avx2) redirected to 0x483fed0 (strcmp)
+--978-- REDIR: 0x4916e80 (libc.so.6:realloc) redirected to 0x483df30 (realloc)
+--978-- REDIR: 0x491b6b0 (libc.so.6:strncat) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--978-- REDIR: 0x4a05200 (libc.so.6:__strncat_avx2) redirected to 0x483ede0 (strncat)
+--978-- Reading syms from /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+--978--    object doesn't have a symbol table
+==978== 
+==978== HEAP SUMMARY:
+==978==     in use at exit: 1,654 bytes in 4 blocks
+==978==   total heap usage: 206 allocs, 202 frees, 10,977,072 bytes allocated
+==978== 
+==978== Searching for pointers to 4 not-freed blocks
+==978== Checked 95,360 bytes
+==978== 
+==978== 36 bytes in 1 blocks are still reachable in loss record 1 of 4
+==978==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==978==    by 0x401F5DE: strdup (strdup.c:42)
+==978==    by 0x4019A91: _dl_load_cache_lookup (dl-cache.c:338)
+==978==    by 0x400A989: _dl_map_object (dl-load.c:2102)
+==978==    by 0x4015D46: dl_open_worker (dl-open.c:513)
+==978==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
+==978==    by 0x4015609: _dl_open (dl-open.c:837)
+==978==    by 0x49DB8C0: do_dlopen (dl-libc.c:96)
+==978==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
+==978==    by 0x49DC9F2: _dl_catch_error (dl-error-skeleton.c:227)
+==978==    by 0x49DB9F4: dlerror_run (dl-libc.c:46)
+==978==    by 0x49DB9F4: __libc_dlopen_mode (dl-libc.c:195)
+==978==    by 0x486D9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
+==978== 
+==978== 36 bytes in 1 blocks are still reachable in loss record 2 of 4
+==978==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==978==    by 0x400D5B7: _dl_new_object (dl-object.c:196)
+==978==    by 0x4006E96: _dl_map_object_from_fd (dl-load.c:997)
+==978==    by 0x400A61A: _dl_map_object (dl-load.c:2236)
+==978==    by 0x4015D46: dl_open_worker (dl-open.c:513)
+==978==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
+==978==    by 0x4015609: _dl_open (dl-open.c:837)
+==978==    by 0x49DB8C0: do_dlopen (dl-libc.c:96)
+==978==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
+==978==    by 0x49DC9F2: _dl_catch_error (dl-error-skeleton.c:227)
+==978==    by 0x49DB9F4: dlerror_run (dl-libc.c:46)
+==978==    by 0x49DB9F4: __libc_dlopen_mode (dl-libc.c:195)
+==978==    by 0x486D9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
+==978== 
+==978== 384 bytes in 1 blocks are still reachable in loss record 3 of 4
+==978==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==978==    by 0x401331C: _dl_check_map_versions (dl-version.c:274)
+==978==    by 0x40160FC: dl_open_worker (dl-open.c:577)
+==978==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
+==978==    by 0x4015609: _dl_open (dl-open.c:837)
+==978==    by 0x49DB8C0: do_dlopen (dl-libc.c:96)
+==978==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
+==978==    by 0x49DC9F2: _dl_catch_error (dl-error-skeleton.c:227)
+==978==    by 0x49DB9F4: dlerror_run (dl-libc.c:46)
+==978==    by 0x49DB9F4: __libc_dlopen_mode (dl-libc.c:195)
+==978==    by 0x486D9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
+==978==    by 0x486DC13: _Unwind_ForcedUnwind (unwind-forcedunwind.c:127)
+==978==    by 0x486BF65: __pthread_unwind (unwind.c:121)
+==978== 
+==978== 1,198 bytes in 1 blocks are still reachable in loss record 4 of 4
+==978==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==978==    by 0x400D283: _dl_new_object (dl-object.c:89)
+==978==    by 0x4006E96: _dl_map_object_from_fd (dl-load.c:997)
+==978==    by 0x400A61A: _dl_map_object (dl-load.c:2236)
+==978==    by 0x4015D46: dl_open_worker (dl-open.c:513)
+==978==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
+==978==    by 0x4015609: _dl_open (dl-open.c:837)
+==978==    by 0x49DB8C0: do_dlopen (dl-libc.c:96)
+==978==    by 0x49DC927: _dl_catch_exception (dl-error-skeleton.c:208)
+==978==    by 0x49DC9F2: _dl_catch_error (dl-error-skeleton.c:227)
+==978==    by 0x49DB9F4: dlerror_run (dl-libc.c:46)
+==978==    by 0x49DB9F4: __libc_dlopen_mode (dl-libc.c:195)
+==978==    by 0x486D9FA: pthread_cancel_init (unwind-forcedunwind.c:53)
+==978== 
+==978== LEAK SUMMARY:
+==978==    definitely lost: 0 bytes in 0 blocks
+==978==    indirectly lost: 0 bytes in 0 blocks
+==978==      possibly lost: 0 bytes in 0 blocks
+==978==    still reachable: 1,654 bytes in 4 blocks
+==978==         suppressed: 0 bytes in 0 blocks
+==978== 
+==978== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

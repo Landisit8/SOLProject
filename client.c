@@ -3,13 +3,15 @@
 #include <utils.h>
 #include <conn.h>
 #include <ops.h>
-#include <utilslist.h>
+//#include <utilslist.h>
 
 #define MAX 2048
 
 char* cartellaLettura = NULL;
 char* cartellaEspulsi = NULL;
 char* SOCKET = NULL;
+
+//lista* option;
 
 /**
  * \ Guarda se sei dentro la directory corrente
@@ -124,6 +126,7 @@ int parsing (int n, char** valori){
 	int opt;
 	int r;
 	int p = 0;
+	//int bool = 0;
 	size_t sz;
 	long num = 0;
 	long nume = -1;
@@ -134,9 +137,9 @@ int parsing (int n, char** valori){
 	char* nome;
 	char* dirname;
 	void* buf = NULL;
-	
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1){
+		//nodo* node = alloca(sizeof(nodo*));
 		switch(opt) 
 		{
 			case 'h':
@@ -159,28 +162,37 @@ int parsing (int n, char** valori){
 				if (p) fprintf(stdout, "Connessione riuscita al socket\n");
 			break;
 			case 'w':
-					token = strtok(optarg, ",");
-					while (token != NULL){
-						// prendo il dirname
-						if (num == 0){
-							dirname = alloca(strlen(token));
-							strncpy(dirname, token, strlen(token));
-							num++;;
-						}
-						if (num == 1) isNumber(token, &nume);
-						token = strtok(NULL,",");
+			/*
+				bool = 1;
+				node->lettera = 'w';
+				listHead(node, option);
+				*/
+				token = strtok(optarg, ",");
+				while (token != NULL){
+					// prendo il dirname
+					if (num == 0){
+						dirname = alloca(strlen(token));
+						strncpy(dirname, token, strlen(token));
+						num++;;
 					}
-					if (p){
-						if (nume>0) fprintf(stdout,"Scrivo %ld file ", nume);
-						else fprintf(stdout, "Scrivo tutti i file ");
-						fprintf(stdout, "da questa cartella %s\n", dirname);
-					}
+					if (num == 1) isNumber(token, &nume);
+					token = strtok(NULL,",");
+				}
+				if (p){
+					if (nume>0) fprintf(stdout,"Scrivo %ld file ", nume);
+					else fprintf(stdout, "Scrivo tutti i file ");
+					fprintf(stdout, "da questa cartella %s\n", dirname);
+				}
 
-					if (nume == 0)	nume = -1;
+				if (nume == 0)	nume = -1;
 
-					if (writeDir(dirname, &nume) < 0)	return -1;	
+				if (writeDir(dirname, &nume) < 0)	return -1;	
 			break;
 			case 'W':
+				/*bool = 1;
+				node->lettera = 'W';
+				listHead(node, option);
+				*/
 				token = strtok(optarg,",");
 
 				while(token != NULL)
@@ -204,7 +216,12 @@ int parsing (int n, char** valori){
 				cartellaEspulsi = alloca(strlen(optarg) + 1);
 				strncpy(cartellaEspulsi,optarg,strlen(optarg) +1);
 				if (p) fprintf(stdout,"I file espulsi vengono salvati in %s\n", optarg);
-
+				/*if (doubleV(option) == 0){
+					
+				} else {
+					fprintf(stderr, "NON E' STATO INSERITO W o w");
+					return -1;
+				}*/
 			break;
 			case 'r':
 				r = readFile(optarg, &buf, &sz);
@@ -246,6 +263,11 @@ int parsing (int n, char** valori){
 				cartellaLettura = alloca(strlen(optarg) + 1);
 				strncpy(cartellaLettura, optarg, strlen(optarg) + 1);
 				if (p)	fprintf(stdout,"I file letti vengono salvati in %s\n", cartellaLettura);
+				/*if (doubleV(option) == 0){
+				} else {
+					fprintf(stderr, "NON E' STATO INSERITO W o w");
+					return -1;
+				}*/
 			break;
 			case 't':
 				if((isNumber(optarg, &sleeptime)) == 1)
@@ -290,6 +312,10 @@ int parsing (int n, char** valori){
 				listaHelp();
 			break;
 		}
+		/*
+		if (bool == 0)	free(node);
+			else	bool = 0;
+			*/
 	sleep(sleeptime);
 	}
 	return 0;
@@ -298,13 +324,18 @@ int parsing (int n, char** valori){
 
 int main(int argc, char* argv[])
 {
-	parsing(argc,argv);
+	//list_Start(option);
+	if (parsing(argc,argv) == -1){
+		perror("ERROR: opzioni non valide");
+        exit(EXIT_FAILURE);
+	}
 	if(closeConnection(SOCKET) != 0)
     {
         perror("ERROR: Unable to close connection correctly with server");
 		free(SOCKET);
         exit(EXIT_FAILURE);
     }
+	//listClean(option);
 	free(cartellaEspulsi);
 	free(cartellaLettura);
 	free(SOCKET);

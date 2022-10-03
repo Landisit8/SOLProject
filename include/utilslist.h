@@ -1,10 +1,9 @@
-#if !defined(_UTIL_H)
+#if !defined(_UTILSLIST_H)
 #define _UTILSLIST_H
 
 typedef struct node
 {
     int lettera;
-    char* dati;
     struct node* next;
 }nodo;
 
@@ -15,7 +14,7 @@ typedef struct list
     size_t lung;
 }lista;
 
-static inline void msg_lStart(lista* list)
+static inline void list_Start(lista* list)
 {
   list->testa = NULL;
   list->coda = NULL;
@@ -25,7 +24,7 @@ static inline void msg_lStart(lista* list)
 /**
  * Inserimento in testa
  */
-static inline void listHead(nodo *head, list *list)
+static inline void listHead(nodo *head, lista *list)
 {
   // lista vuota
   if (list->lung == 0)
@@ -48,11 +47,25 @@ static inline void listHead(nodo *head, list *list)
   return;
 }
 
-//  cancello la lista
-static inline void listClean(list* list)
+//  controllo se nella lista esiste l'elemento 'w' o 'W'
+static inline int doubleV(lista* list)
 {
-    msg_t* current = list->testa;
-    msg_t* next;
+  nodo* current = list->testa;
+  nodo* next;
+
+  while (current != NULL){
+    if ((current->lettera == 'w')  || (current->lettera == 'W')) return 0;
+    next = current->next;
+    current = next;
+  }
+  return -1;
+}
+
+//  cancello la lista
+static inline void listClean(lista* list)
+{
+    nodo* current = list->testa;
+    nodo* next;
 
     while (current != NULL)
     {
@@ -65,10 +78,6 @@ static inline void listClean(list* list)
     free(list);
     return;
 }
-
-
-
-
 
 
 #endif /* _UTILSLIST_H */

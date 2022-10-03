@@ -422,9 +422,14 @@ int fileRemove(nodo* root, char* nome, pid_t cLock)
 	if (find->stato != 0)	return -2;
 	if (find->lucchetto == 0 && find->sLock != cLock)	return -2;
 
+  	int isLeaf = 1;
+    if(find->right == NULL && find->right == NULL) {
+        isLeaf = 0;
+    }
+
 	if (!(leaf = searchLeaf(root)))	return -3;
 
-	if ((strlen(find->nome) == strlen(leaf->nome)) && (strlen(find->testo) == strlen(leaf->testo))){
+	if (isLeaf == 0){
 		free(leaf->nome);
 		free(leaf->testo);
 		free(leaf);
