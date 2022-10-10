@@ -141,7 +141,6 @@ char* readBytes(const char* name, long* filelen)
 	if (p) fprintf(stderr, "nome: %s\n", name);
 	if ((file = fopen(name, "rb")) == NULL){
 		perror("ERRORE: APERTURA FILE");
-		fclose(file);
 		return NULL;
 	}
 
@@ -330,6 +329,7 @@ int writeFile(const char* pathname, const char* dirname)
 	if ((buf = readBytes(pathname, &fileLen)) == NULL){
 		errno = -1;
 		perror("ERRORE: Lettura di readFile");
+		free(write);
 		return -1;
 	}
 

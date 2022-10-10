@@ -171,7 +171,7 @@ int parsing (int n, char** valori){
 				while (token != NULL){
 					// prendo il dirname
 					if (num == 0){
-						dirname = alloca(strlen(token));
+						dirname = alloca(strlen(token) + 1);
 						strncpy(dirname, token, strlen(token));
 						num++;;
 					}
@@ -187,6 +187,7 @@ int parsing (int n, char** valori){
 				if (nume == 0)	nume = -1;
 
 				if (writeDir(dirname, &nume) < 0)	return -1;	
+				if (dirname)	free(dirname);
 			break;
 			case 'W':
 				/*bool = 1;
