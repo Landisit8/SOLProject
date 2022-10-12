@@ -3,7 +3,7 @@
 #include <utils.h>
 #include <conn.h>
 #include <ops.h>
-//#include <utilslist.h>
+#include <utilslist.h>
 
 #define MAX 2048
 
@@ -11,7 +11,7 @@ char* cartellaLettura = NULL;
 char* cartellaEspulsi = NULL;
 char* SOCKET = NULL;
 
-//lista* option;
+lista* option;
 
 /**
  * \ Guarda se sei dentro la directory corrente
@@ -126,7 +126,7 @@ int parsing (int n, char** valori){
 	int opt;
 	int r;
 	int p = 0;
-	//int bool = 0;
+	int bool = 0;
 	size_t sz;
 	long num = 0;
 	long nume = -1;
@@ -139,7 +139,7 @@ int parsing (int n, char** valori){
 	void* buf = NULL;
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1){
-		//nodo* node = alloca(sizeof(nodo*));
+		nodo* node = alloca(sizeof(nodo*));
 		switch(opt) 
 		{
 			case 'h':
@@ -162,11 +162,9 @@ int parsing (int n, char** valori){
 				if (p) fprintf(stdout, "Connessione riuscita al socket\n");
 			break;
 			case 'w':
-			/*
 				bool = 1;
 				node->lettera = 'w';
 				listHead(node, option);
-				*/
 				token = strtok(optarg, ",");
 				while (token != NULL){
 					// prendo il dirname
@@ -190,21 +188,17 @@ int parsing (int n, char** valori){
 				if (dirname)	free(dirname);
 			break;
 			case 'W':
-				/*bool = 1;
+				bool = 1;
 				node->lettera = 'W';
 				listHead(node, option);
-				*/
 				token = strtok(optarg,",");
 
 				while(token != NULL)
 				{
 					file = alloca(strlen(token) + 1);
 					strncpy(file, token, strlen(token) + 1);
-					if (cartellaEspulsi)
-						r = writeFile(file, cartellaEspulsi);
-					//printf("valore di r: %d\n", r);
-					else
-						r = writeFile(file, NULL);
+					if (cartellaEspulsi)	r = writeFile(file, cartellaEspulsi);
+					else	r = writeFile(file, NULL);
 					if(r == -1)
 					{
 						perror("ERROR: write to file");
@@ -214,17 +208,19 @@ int parsing (int n, char** valori){
 				}
 			break;
 			case 'D':
-				cartellaEspulsi = alloca(strlen(optarg) + 1);
-				strncpy(cartellaEspulsi,optarg,strlen(optarg) +1);
 				if (p) fprintf(stdout,"I file espulsi vengono salvati in %s\n", optarg);
-				/*if (doubleV(option) == 0){
-					
+				if (doubleV(option) == 0){
+					cartellaEspulsi = alloca(strlen(optarg) + 1);
+					strncpy(cartellaEspulsi,optarg,strlen(optarg) +1);
 				} else {
-					fprintf(stderr, "NON E' STATO INSERITO W o w");
+					fprintf(stderr, "NON E' STATO INSERITO W o w\n");
 					return -1;
-				}*/
+				}
 			break;
 			case 'r':
+				bool = 1;
+				node->lettera = 'r';
+				listHead(node, option);
 				r = readFile(optarg, &buf, &sz);
 				if (r == -1){
 					errno = ECONNREFUSED;
@@ -237,6 +233,9 @@ int parsing (int n, char** valori){
 				}
 			break;
 			case 'R':
+				bool = 1;
+				node->lettera = 'R';
+				listHead(node, option);
 				//	preso da internet, https://stackoverflow.com/questions/1052746/getopt-does-not-parse-optional-arguments-to-parameters
 				tmp = optarg;
 				//	controllo se c'è l'argomento opzionale
@@ -261,14 +260,14 @@ int parsing (int n, char** valori){
 				}
 			break;
 			case 'd':
-				cartellaLettura = alloca(strlen(optarg) + 1);
-				strncpy(cartellaLettura, optarg, strlen(optarg) + 1);
 				if (p)	fprintf(stdout,"I file letti vengono salvati in %s\n", cartellaLettura);
-				/*if (doubleV(option) == 0){
+				if (erre(option) == 0){
+					cartellaLettura = alloca(strlen(optarg) + 1);
+					strncpy(cartellaLettura, optarg, strlen(optarg) + 1);
 				} else {
-					fprintf(stderr, "NON E' STATO INSERITO W o w");
+					fprintf(stderr, "NON E' STATO INSERITO W o w\n");
 					return -1;
-				}*/
+				}
 			break;
 			case 't':
 				if((isNumber(optarg, &sleeptime)) == 1)
@@ -313,10 +312,8 @@ int parsing (int n, char** valori){
 				listaHelp();
 			break;
 		}
-		/*
 		if (bool == 0)	free(node);
 			else	bool = 0;
-			*/
 	sleep(sleeptime);
 	}
 	return 0;
@@ -325,18 +322,25 @@ int parsing (int n, char** valori){
 
 int main(int argc, char* argv[])
 {
-	//list_Start(option);
+	option = alloca(sizeof(lista));
+	list_Start(option);
 	if (parsing(argc,argv) == -1){
 		perror("ERROR: opzioni non valide");
+		listClean(option);
+		free(cartellaEspulsi);
+		free(cartellaLettura);
         exit(EXIT_FAILURE);
 	}
 	if(closeConnection(SOCKET) != 0)
     {
         perror("ERROR: Unable to close connection correctly with server");
+		listClean(option);
+		free(cartellaEspulsi);
+		free(cartellaLettura);
 		free(SOCKET);
         exit(EXIT_FAILURE);
     }
-	//listClean(option);
+	listClean(option);
 	free(cartellaEspulsi);
 	free(cartellaLettura);
 	free(SOCKET);

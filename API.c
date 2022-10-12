@@ -247,6 +247,7 @@ int readFile(const char* pathname, void** buf, size_t* size)
 	char *tmp_buf = alloca((*size));
 	strncpy(tmp_buf, tmp->str, tmp->lStr);
 	*buf = (void*)tmp_buf;
+	free(tmp_buf);
 	free(tmp);
 	return 0;
 }
@@ -364,8 +365,9 @@ int writeFile(const char* pathname, const char* dirname)
 	if (tmp->op == OP_LFU){
 		char *nome = strrchr(tmp->nome, '/');
 		nome++; 
+		//	per renderlo pulito, metti controllo a null su dirname e sostituisci
 		writeBytes(nome,tmp->str,tmp->lStr,"./LFU");
-		writeFile(pathname,dirname);
+		if (writeFile(pathname,dirname) == 0)	return 0;
 	}
 
 	if (tmp->op == OP_OK){

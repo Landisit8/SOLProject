@@ -61,6 +61,20 @@ static inline int doubleV(lista* list)
   return -1;
 }
 
+//  controllo se nella lista esiste l'elemento 'r' o 'R'
+static inline int erre(lista* list)
+{
+  nodo* current = list->testa;
+  nodo* next;
+
+  while (current != NULL){
+    if ((current->lettera == 'r')  || (current->lettera == 'R')) return 0;
+    next = current->next;
+    current = next;
+  }
+  return -1;
+}
+
 //  cancello la lista
 static inline void listClean(lista* list)
 {
