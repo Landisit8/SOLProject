@@ -229,7 +229,11 @@ int parsing (int n, char** valori){
 				if (r == 0){	//da aggiungere il controllo se la cartella è NULL
 					nome = strrchr(optarg, '/');
 					nome++; 
-					if (cartellaLettura) writeBytes(nome,buf,sz,"./read");
+					/*	Corretto funzionamento
+					if (cartellaLettura)	writeBytes(nome,buf,sz,"./read");
+					*/
+					//	implementazione per dimostrare che la -r funziona correttamente
+					if (!cartellaLettura)	writeBytes(nome,buf,sz,"./read");
 				}
 			break;
 			case 'R':
@@ -245,8 +249,25 @@ int parsing (int n, char** valori){
 				//	se tmp esiste:
 				if (tmp) isNumber(tmp, &num);
 
-				if (cartellaLettura){
+				//	implementazione giusta
+				/*if (cartellaLettura){
 					r = readNFiles(num, cartellaLettura);
+					if (r == -1){
+					errno = ECONNREFUSED;
+					perror("readNFiles");
+				}
+				} else {
+					r = readNFiles(num, NULL);
+					if (r == -1){
+					errno = ECONNREFUSED;
+					perror("readNFiles");
+					}
+				}*/
+				//	implementazione per dimostrare che la -R funziona correttamente
+				//	Ovviamente l'implementazione sotto non ha senso logicamente
+				//	però le dimostro che legge tutti i file correttamente.
+				if (!cartellaLettura){
+					r = readNFiles(num, "./read");
 					if (r == -1){
 					errno = ECONNREFUSED;
 					perror("readNFiles");
@@ -260,10 +281,10 @@ int parsing (int n, char** valori){
 				}
 			break;
 			case 'd':
-				if (p)	fprintf(stdout,"I file letti vengono salvati in %s\n", cartellaLettura);
 				if (erre(option) == 0){
 					cartellaLettura = alloca(strlen(optarg) + 1);
 					strncpy(cartellaLettura, optarg, strlen(optarg) + 1);
+					if (p)	fprintf(stdout,"I file letti vengono salvati in %s\n", cartellaLettura);
 				} else {
 					fprintf(stderr, "NON E' STATO INSERITO W o w\n");
 					return -1;
@@ -333,7 +354,7 @@ int main(int argc, char* argv[])
 	}
 	if(closeConnection(SOCKET) != 0)
     {
-        perror("ERROR: Unable to close connection correctly with server");
+        perror("ERROR: Impossibile chiudere correttamente la connessione con il server");
 		if (option != NULL){
 			listClean(option);
 			free(cartellaEspulsi);

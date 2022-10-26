@@ -166,7 +166,7 @@ nodo* searchLeaf (nodo* n)
 	return leaf;
 }
 
-//	cerca il valore minimo nell'albero, un'altra ricerca per trovare il nome del nodo
+//	cerca la frequenza minima nell'albero, un'altra ricerca per trovare il nome del nodo
 //	cosi restituisce il nodo effettevivo, infine si cerca una foglia qualsisi e con le considerazioni della funzione searchLeaf
 //	si scambia con il nodo con la frequenza minima trovata con la foglia e si cancella la foglia 
 int lfuRemove(nodo* n, msg_t** text)
@@ -206,21 +206,25 @@ int lfuRemove(nodo* n, msg_t** text)
 	return 0;
 }
 
-nodo* findTreeOrd(nodo* root, int* min, char** name){
+//	Ricerco l'indice dell'primo nodo inserito nell'intero albero e salvo l'informazione in ord e name.
+nodo* findTreeOrd(nodo* root, int* ord, char** name){
 	if (root == NULL)	return NULL;
 	if (strcmp(root->nome, "pRoot") != 0) {
-		if (*min > (root->ord))	
+		if (*ord > (root->ord))	
 		{
-			*min = root->ord;
+			*ord = root->ord;
 			strncpy(*name,root->nome, strlen(root->nome) + 1); 
 		}
 	}
-	findTreeOrd(root->left,min,name);
-	findTreeOrd(root->right,min,name);
+	findTreeOrd(root->left,ord,name);
+	findTreeOrd(root->right,ord,name);
 
 	return root;
 }
 
+//	cerca il primo elemento inserito nell'albero, un'altra ricerca per trovare il nome del nodo
+//	cosi restituisce il nodo effettevivo, infine si cerca una foglia qualsisi e con le considerazioni della funzione searchLeaf
+//	si scambia con il nodo con la frequenza minima trovata con la foglia e si cancella la foglia 
 int fifoRemove(nodo* root, msg_t** text)
 {
 	if (root == NULL)	return -3;
@@ -263,6 +267,7 @@ int addFrequenza(int fre)
 	return fre++;
 }
 
+//	funzione che stampa i valori nell'albero
 void print (nodo* n){
 
   if(n == NULL) return;
@@ -277,6 +282,11 @@ void print (nodo* n){
   print(n->right);
 }
 
+//	funzione con diversi casi, ove:
+//	case 0: cerco il nome, e se non esiste, creo l'elemento nell'albero
+//	case 1: cambia lo stato della lock e Stato
+//	case 2: cambia lo stato
+//	case 3: cerco il nome, e se non esiste, creo l'elemento nell'albero e setto la lock e lo stato
 int openFile(nodo* root, char* name, int flags, pid_t cLock)
 {
 	LOCK(&setNumMax);
@@ -394,6 +404,7 @@ int appendToFile(nodo* root, char* name, char* text, pid_t cLock)
 	return 0;
 }
 
+//	funzione che chiama la open o la append a seconda della findTreeFromName
 int writeFile(nodo* root, char* name, char* text, pid_t cLock)
 {
 	int tmp;
@@ -489,6 +500,7 @@ int changeLock(nodo* root, char* name, int lb, pid_t cLock)
 	return 0;
 }
 
+//	funzione che pulisce l'albero
 void cleanTree (nodo* root)
 {
 	if (root == NULL)	return;

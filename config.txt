@@ -1,5 +1,0 @@
-numeroThread=8;
-memoriaMassima=32;
-numerofile=100;
-socket=./canale;
-fileLogName=logFile;

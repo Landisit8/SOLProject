@@ -40,7 +40,7 @@ clean		:
 	rm -f $(TARGETS)
 
 cleanall	: clean
-	\rm -f *.o *~ *.a *.out ./server ./client ./canale ./logFile.txt ./libs/*.* ./read/*.* ./LFU/*.*
+	\rm -f *.o *~ *.a *.out ./server ./client ./canale ./logFile.txt ./libs/*.* ./read/*.* ./politica/*.*
 
 test1: all
 	./test/test1.sh

@@ -377,6 +377,10 @@ int writeFile(const char* pathname, const char* dirname)
 	return -1;
 }
 
+/**
+ *	\ Richiesta di scrivere al file "pathname" i "size" contenuti nel buffer "buf"
+ *	\ Ritorna 0 in caso di successo -1 altrimenti
+*/
 int appendToFile(const char* pathname, void* buf, size_t size, const char* dirname)
 {
 	msg_t* append = alloca(sizeof(msg_t));
@@ -431,6 +435,11 @@ int appendToFile(const char* pathname, void* buf, size_t size, const char* dirna
 	return 0;
 }
 
+/**
+ *	\ si setta il flag "lucchetto" al file, settando in lock il file.
+      Se il file era stato aperto/creato con il flag "lucchetto" e la richiesta viene dallo stesso processo.
+ *	\ Ritorna 0 in caso di successo, -1 altrimenti
+*/
 int lockFile(const char* pathname)
 {
 	msg_t* lock = alloca(sizeof(msg_t));
@@ -473,6 +482,11 @@ int lockFile(const char* pathname)
 	return 0;
 }
 
+/**
+ *	\ si setta il flag "lucchetto" al file, settando in lock il file.
+      Se il file era stato aperto/creato con il flag "lucchetto" e la richiesta viene dallo stesso processo.
+ *	\ Ritorna 0 in caso di successo, -1 altrimenti
+*/
 int unlockFile(const char* pathname)
 {
 	msg_t* unlock = alloca(sizeof(msg_t));
@@ -515,6 +529,11 @@ int unlockFile(const char* pathname)
 	return 0;
 }
 
+/**
+ *	\ Richiesta di chiusura del file puntato da "pathname".
+      eventuali operazioni sul file falliscono.
+ *	\ Ritorna 0 in caso di successo, -1 altrimenti
+*/
 int closeFile(const char* pathname)
 {
 	msg_t* close = alloca(sizeof(msg_t));
@@ -557,6 +576,10 @@ int closeFile(const char* pathname)
 	return 0;
 }
 
+/**
+ *	\ rimuove il file cancellando dalla cache del server principale.
+ *	\ l'operazione falisce se il file e lock o chiuso da parte di un client diverso da chi effettua la remove
+*/
 int removeFile(const char* pathname)
 {
 	msg_t* remove = alloca(sizeof(msg_t));
@@ -597,7 +620,10 @@ int removeFile(const char* pathname)
 	return 0;
 }
 
-//	setto il parametro p per la stampa a schermo
+/**
+ *	\ Setta il valore del -p 
+ *	\ permette di stampare i messaggi in schermo
+*/
 void set_p()
 {
 	if (!p) p = 1;

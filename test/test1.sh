@@ -7,7 +7,7 @@ valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose -
 pid=$!
 sleep 2s
 #-t 200
-./client -p -f ./canale -W ./file/Matteo.txt -W ./file/fede.txt -w ./file2,0
+./client -p -f ./canale -W ./file/Matteo.txt -w ./file2,0
 ./client -p -f ./canale -r ./file/Matteo.txt -d ./read
 ./client -p -f ./canale -R
 ./client -p -f ./canale -t 2 -l ./file/Matteo.txt -u ./file/Matteo.txt
