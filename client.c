@@ -139,7 +139,7 @@ int parsing (int n, char** valori){
 	void* buf = NULL;
 
 	while ((opt = getopt(n,valori,"hf:w:W:D:r:R::d:t:l:u:c:p")) != -1){
-		nodo* node = alloca(sizeof(nodo*));
+		nodo* node = alloca(sizeof(nodo));
 		switch(opt) 
 		{
 			case 'h':
@@ -171,7 +171,7 @@ int parsing (int n, char** valori){
 					if (num == 0){
 						dirname = alloca(strlen(token) + 1);
 						strncpy(dirname, token, strlen(token));
-						num++;;
+						num++;
 					}
 					if (num == 1) isNumber(token, &nume);
 					token = strtok(NULL,",");
@@ -199,9 +199,9 @@ int parsing (int n, char** valori){
 					strncpy(file, token, strlen(token) + 1);
 					if (cartellaEspulsi)	r = writeFile(file, cartellaEspulsi);
 					else	r = writeFile(file, NULL);
-					if(r == -1)
+					if(r == -1 && p)
 					{
-						perror("ERROR: write to file");
+						fprintf(stderr,"ERROR: write to file");
 					}
 					token = strtok(NULL, ",");
 					free(file);

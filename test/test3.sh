@@ -14,10 +14,9 @@ file_index=10
 while [ -e /proc/$pid/status ]
 do
     #continue only if the process is still alive
-    if [ -e /proc/$pid/status ]; then
-
+    if [ -e /proc/$pid/status ]; then   
         valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=valgrind-out.txt ./client -f ./canale -W ./stresstest/files$folder_index/file$file_index.txt -r ./stresstest/files$folder_index/file$file_index.txt -l ./stresstest/files$folder_index/file$file_index.txt -u ./stresstest/files$folder_index/file$file_index.txt -R 1
-        valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=valgrind-out1.txt ./client -f ./canale -l ./stresstest/files$folder_index/file$file_index.txt -u ./stresstest/files$folder_index/file$file_index.txt -r ./stresstest/files$folder_index/file$file_index.txt -l ./stresstest/files$folder_index/file$file_index.txt -c ./stresstest/files$folder_index/file$file_index.txt
+        valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=valgrind-out.txt ./client -f ./canale -l ./stresstest/files$folder_index/file$file_index.txt -u ./stresstest/files$folder_index/file$file_index.txt -r ./stresstest/files$folder_index/file$file_index.txt -l ./stresstest/files$folder_index/file$file_index.txt -c ./stresstest/files$folder_index/file$file_index.txt
         
         file_index=$(($file_index - 1))
         

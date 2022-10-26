@@ -373,7 +373,6 @@ int writeFile(const char* pathname, const char* dirname)
 		free(tmp);
 		return 0;
 	}
-
 	free(tmp);
 	return -1;
 }
