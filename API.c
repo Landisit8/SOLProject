@@ -366,7 +366,10 @@ int writeFile(const char* pathname, const char* dirname)
 		char *nome = strrchr(tmp->nome, '/');
 		nome++; 
 		writeBytes(nome,tmp->str,tmp->lStr,"./Politica");
-		if (writeFile(pathname,dirname) == 0)	return 0;
+		if (writeFile(pathname,dirname) == 0){
+			free(tmp);
+			return 0;
+		}	
 	}
 
 	if (tmp->op == OP_OK){
