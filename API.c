@@ -121,7 +121,7 @@ int openFile(const char* pathname, int flags)
 	}
 
 	if (tmp.op == OP_LFU){
-		writeBytes(tmp.nome,tmp.str,tmp.lStr,"./LFU");
+		writeBytes(tmp.nome,tmp.str,tmp.lStr,"./Politica");
 		openFile(pathname,flags);
 	}
 	if (tmp.op != OP_OK)
@@ -293,7 +293,7 @@ int readNFiles(int N, const char* dirname){
 		if (dirname != NULL) {
 			char* fileName = strrchr(tmp.nome, '/');	//	prende l'ultimo '/'
 			++fileName;
-			writeBytes(fileName,tmp.str,tmp.lStr,dirname);
+			writeBytes(fileName,tmp.str,tmp.lStr,"./read");
 		}
 		N--;
 	}while(N>0);
@@ -365,8 +365,7 @@ int writeFile(const char* pathname, const char* dirname)
 	if (tmp->op == OP_LFU){
 		char *nome = strrchr(tmp->nome, '/');
 		nome++; 
-		//	per renderlo pulito, metti controllo a null su dirname e sostituisci
-		writeBytes(nome,tmp->str,tmp->lStr,"./LFU");
+		writeBytes(nome,tmp->str,tmp->lStr,"./Politica");
 		if (writeFile(pathname,dirname) == 0)	return 0;
 	}
 
@@ -424,7 +423,7 @@ int appendToFile(const char* pathname, void* buf, size_t size, const char* dirna
 	if (tmp.op == OP_LFU){
 		char *nome = strrchr(tmp.nome, '/');
 		nome++; 
-		writeBytes(nome,tmp.str,tmp.lStr,"./LFU");
+		writeBytes(nome,tmp.str,tmp.lStr,"./Politica");
 		appendToFile(pathname,buf,size,dirname);
 	}
 

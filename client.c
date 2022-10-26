@@ -334,13 +334,15 @@ int main(int argc, char* argv[])
 	if(closeConnection(SOCKET) != 0)
     {
         perror("ERROR: Unable to close connection correctly with server");
-		listClean(option);
-		free(cartellaEspulsi);
-		free(cartellaLettura);
-		free(SOCKET);
-        exit(EXIT_FAILURE);
+		if (option != NULL){
+			listClean(option);
+			free(cartellaEspulsi);
+			free(cartellaLettura);
+			free(SOCKET);
+			exit(EXIT_FAILURE);
+		}
     }
-	listClean(option);
+	if (option != NULL)	listClean(option);
 	free(cartellaEspulsi);
 	free(cartellaLettura);
 	free(SOCKET);
